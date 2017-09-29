@@ -366,7 +366,7 @@ function playSound(bufferKey, rate, loop) {//TODO rewrite with gain nodes and pi
   source.start(0);                           // play the source now
                                              // note: on older systems, may have to use deprecated noteOn(time);
   if (bufferKey == 'play_music') {
-      	source.loop = true;
+      	// source.loop = true;
       	console.log('looping ', bufferKey);
   }                                             
 }
