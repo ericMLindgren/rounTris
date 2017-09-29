@@ -362,7 +362,7 @@ function playSound(bufferKey, rate, loop) {//TODO rewrite with gain nodes and pi
   source.buffer = soundBuffers[bufferKey];                    // tell the source which sound to play
   source.connect(context.destination);       // connect the source to the context's destination (the speakers)
   source.playbackRate.value = rate;
-  source.loop = true;
+  // source.loop = true;
   source.start(0);                           // play the source now
                                              // note: on older systems, may have to use deprecated noteOn(time);
   if (bufferKey == 'play_music') {
