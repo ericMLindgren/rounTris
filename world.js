@@ -16,12 +16,13 @@ var world = new Path.RegularPolygon({
 //Make gamefield
 
 var allLayers = [];
+
 for (var i = 1;i <= worldSize.y;i++){
 	if (i>1) {
 		lastRad += ((2*Math.PI*lastRad)/worldSize.x);
 	}
 		
-
+ 
 	var newLayer = new Path.RegularPolygon({
 		radius: lastRad,
 		center: view.center,
@@ -40,6 +41,7 @@ allLayers[lossHeight].strokeWidth = .5;
 //Block Code
 var stateColor = {'falling' : 'teal', 'stuck':'black', 'loser':'red'};
 allBlocks = [];
+
 function Block(pos){ //Move almost all this.functions to prototypes TODO
 	if (pos instanceof Array) //Accept both array and Point in construction
 		this.position = new Point(pos);
@@ -53,7 +55,7 @@ function Block(pos){ //Move almost all this.functions to prototypes TODO
 	this.state = 'falling';
 	this.rep = new Path.Line();
 
-	allBlocks.push(this);
+	
 
 	this.setPosition = function(newPos, dirMod){
 
@@ -76,6 +78,7 @@ function Block(pos){ //Move almost all this.functions to prototypes TODO
 	}.bind(this);
 
 	this.drop = function() {
+		
 		if (this.position.y == 1){ //If we're at bottom row, stick
 			this.makeStuck();
 			}
@@ -103,7 +106,8 @@ function Block(pos){ //Move almost all this.functions to prototypes TODO
 
         dbg('layer : ' + layer + '\nPos : ' + pos);
         dbg(allLayers);
-        this.rep = new Path.Line(allLayers[layer].segments[pos].point,allLayers[layer].segments[nextPos].point);
+
+        this.rep = new Path.Line(allLayers[layer].segments[pos].point, allLayers[layer].segments[nextPos].point);
         // this.rep.strokeColor = stateColor[this.state];
         this.rep.fillColor =  stateColor[this.state];
         this.rep.strokeWidth = 4;
@@ -215,7 +219,7 @@ function pointComp(pointA, pointB){
 }
 
 //Helper functions
-var DEBUG_ON = false;
+var DEBUG_ON = true;
 function dbg(msg){
 	if (DEBUG_ON){
 		console.log(msg);
@@ -246,25 +250,46 @@ function onFrame(event) {
 
 		if (event.time-lastGen>genRate){
 			lastGen = event.time;
-			makeBlocks();
+			makeRandomBlocks
+		();
 		}
 	}
 }
 
+function makeXInWorld(xIn){
+	if (xIn >= worldSize.x){
+		return xIn - worldSize.x;
+	}
+	return xIn;
+}
 
+function makeRowOfBlocks(){
+	var newX = Math.floor(Math.random() * (worldSize.x-1));
+	var blockAr= [];
+	for (var i = 0; i<3;i++){
+		blockAr.push([makeXInWorld(newX+i),worldSize.y-1])
 
-function makeBlocks(){
+	}
+	makeBlocksAt(blockAr);
+}
+
+function makeRandomBlocks(){
     var newX = Math.floor(Math.random() * (worldSize.x-1));
   
     var newBlock = new Block([newX,worldSize.y-1]);
+    makeBlocksAt([[newX,worldSize.y-1]]);
+    // makeRowOfBlocks();
 }
 
 function makeBlocksAt(posAr){
 	while (posAr.length>0){
 		var thisEl = posAr.pop();
    		var newBlock = new Block([thisEl[0],thisEl[1]]);
+   		allBlocks.push(newBlock);
 	}
 }
+
+
 
 function moveBlocks(){
 	for (var i in allBlocks) {
@@ -357,18 +382,19 @@ var context = new AudioContext();
 
 
 // var allSounds = {};
-function playSound(bufferKey, rate, loop) {//TODO rewrite with gain nodes and pitch nodes
-  var source = context.createBufferSource(); // creates a sound source
-  source.buffer = soundBuffers[bufferKey];                    // tell the source which sound to play
-  source.connect(context.destination);       // connect the source to the context's destination (the speakers)
-  source.playbackRate.value = rate;
-  // source.loop = true;
-  source.start(0);                           // play the source now
-                                             // note: on older systems, may have to use deprecated noteOn(time);
-  if (bufferKey == 'play_music') {
-      	// source.loop = true;
-      	console.log('looping ', bufferKey);
-  }                                             
+function playSound(bufferKey, rate) {//TODO rewrite with gain nodes and pitch nodes
+	if (!rate) rate = 1;
+	var source = context.createBufferSource(); // creates a sound source
+	source.buffer = soundBuffers[bufferKey];                    // tell the source which sound to play
+	source.connect(context.destination);       // connect the source to the context's destination (the speakers)
+	source.playbackRate.value = rate;
+	// source.loop = true;
+	source.start(0);                           // play the source now
+	                                         // note: on older systems, may have to use deprecated noteOn(time);
+	if (bufferKey == 'play_music') {
+	  	// source.loop = true;
+	  	console.log('looping ', bufferKey);
+	}                                             
 }
 
 // function playClick() {
