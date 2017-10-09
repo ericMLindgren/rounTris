@@ -12,7 +12,7 @@ const BlockType = { //Don't know about this route.... have to think about blocks
 
 
 
-const World = function (width, height, lossHeight){
+export default function World (width, height, lossHeight){
 	//private variables / methods: one of these: preGame, playing, paused, gameWon, gameLost
 
 	const state = ''; //

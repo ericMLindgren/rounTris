@@ -3,7 +3,7 @@
 // Handles keyboard input and calls world/view methods as appropriate
 
 
-const Controller = function() { //Initialize Controller with refreneces to what it controls or just point later?
+export default function Controller() { //Initialize Controller with refreneces to what it controls or just point later?
 	const keyDown = function () { 
 		//Does this filter between game actions and state actions, like pause? QUESTION TODO
 
@@ -14,5 +14,17 @@ const Controller = function() { //Initialize Controller with refreneces to what 
 		//Takes a tick (probably from view) with event object where event.delta = time since last tick
 		//needs to update world, world should return state, then tick should call View.tick(worldOb) to draw the state
 
+	}
+
+
+	return {
+		startGame: () => {
+			
+			//clear view screen
+			//draw world
+			//Start loop
+			//start music
+
+		}
 	}
 }
