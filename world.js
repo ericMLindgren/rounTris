@@ -1,5 +1,5 @@
 //World class for rounTris.js
-const BlockType = {
+const BlockType = { //Don't know about this route.... have to think about blocks
 	SINGLE: 0,
 	LINE:   1,
 	T:      2,
@@ -7,8 +7,15 @@ const BlockType = {
 	L:      4
 }
 
+
+//NEED BLOCK CLASS
+
+
+
 const World = function (width, height, lossHeight){
-	//private variables / methods:
+	//private variables / methods: one of these: preGame, playing, paused, gameWon, gameLost
+
+	const state = ''; //
 
 	var genRate; //rate at which blocks are generated
 	var dropRate; //rate at which they drop
@@ -24,7 +31,7 @@ const World = function (width, height, lossHeight){
 		}
 	}
 
-	console.log(debrisField);
+	// console.log(debrisField);
 
 	const dropTick = function() {
 		//drops all falling blocks by 1 if they can,
