@@ -16,7 +16,7 @@
 
 
 
-const ActionBuffer = function(keyDict) {
+export default function ActionBuffer(keyDict) {
 
 	const buffer = [];
 
@@ -30,9 +30,9 @@ const ActionBuffer = function(keyDict) {
 		},
 
 		keyIn : (input) => {
-			console.log('checking for key: ' + input);
-			for (key in keyDict){
-				
+			
+			// console.log('checking for key: ' + input);
+			for (let key in keyDict){			
 				if (key === input) {
 					buffer.push(keyDict[key])
 					return 1;
@@ -46,16 +46,11 @@ const ActionBuffer = function(keyDict) {
 
 }
 
-const keyLayout = { //Learn how to pass arguments in this scheme TODO
-	'b' : 'spinDebris',
-	'r' : 'rotateBlocks',
-	's' : 'rushDrop'
-}
 
-let test = new ActionBuffer(keyLayout);
-test.keyIn('b');
-test.keyIn('v');
-test.keyIn('r');
+// let test = new ActionBuffer(keyLayout);
+// test.keyIn('b');
+// test.keyIn('v');
+// test.keyIn('r');
 
-console.log(test.bufferDump());
-console.log(test.bufferDump());
+// console.log(test.bufferDump());
+// console.log(test.bufferDump());
