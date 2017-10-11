@@ -1,16 +1,19 @@
 //World class for rounTris.js
-const BlockType = { //Don't know about this route.... have to think about blocks
-	SINGLE: [[0,0]],
-	LINE:   1,
+
+
+import Block from './Block';
+import {addPoint, subPoint, pointify} from './PointHelpers';
+
+
+const BlockType = { //Need to include inertia as part of this
+	SINGLE: {shape:[[0,0]], momentum:[0,-1]},
+	METEOR: {shape:[[0,0]], momentum:[-1,-1]},
+	ORBIT:   {shape:[[0,0]], momentum:[-1,0]},
 	T:      2,
 	U:      3,
 	L:      4
 }
 
-
-
-import Block from './Block';
-import {addPoint, subPoint, pointify} from './PointHelpers';
 
 export default function World (worldWidth, worldHeight, lossHeight){
 	//private variables / methods: one of these: preGame, playing, paused, gameWon, gameLost
@@ -32,11 +35,13 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	const blocks = [];
 	
 	const debrisField = []; //should init debris field
+
+	const deadBlocks = []; //These are not debris but old blocks that need removal
 	
-	for (let y = 0; y < worldHeight ; y++){
-		debrisField[y] = [];
-		for (let x = 0; x < worldWidth ; x++){
-			debrisField[y].push(0)
+	for (let x = 0; x < worldWidth ; x++){
+		debrisField[x] = [];
+		for (let y = 0; y < worldHeight ; y++){
+			debrisField[x].push(0)
 		}
 	}
 
@@ -50,18 +55,31 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			else makeDebrisFromBlock(block);
 		}
 		
+		clearDeadBlocks();
 		dropTimer = 0;//reset the drop timer
+	}
+
+	const clearDeadBlocks = () => {
+		if (deadBlocks) {
+			for (let blockIndex of deadBlocks){
+				blocks.splice(blockIndex,1);
+				deadBlocks.splice(deadBlocks.indexOf(blockIndex),1);
+			}
+		}
+
 	}
 
 	const canDrop = function(block){
 		let nextPos = addPoint(block.position(), block.momentum()); 
 
 		nextPos = wrapPos(nextPos);
-		console.log('momentum is\n')
-		console.log(block.momentum());
+		console.log("BlockID: ",  blocks.indexOf(block), " ", nextPos)
+		
+		console.log('--')
 
 		if ( (!debrisField[nextPos.x][nextPos.y]) && nextPos.y > -1)
 			return true
+		console.log('hit');
 		return false
 
 	}
@@ -81,7 +99,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			debrisField[debrisPos.x][debrisPos.y]=1;
 		}
 
-		blocks.splice(blocks.indexOf(block),1); //Remove Block from World
+		// blocks.splice(blocks.indexOf(block),1); //Remove Block from World
+		deadBlocks.push(blocks.indexOf(block));
+
 		flags.DEBRIS = true; //Debris needs redraw
 		flags.BLOCK = true; //need to remove dead blocks
 
@@ -107,6 +127,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			if (pos.y > worldHeight -2)
 				pos.y = worldHeight -2 //allows reversing gravity? TODO
 
+
+			// console.log('To Pos:');
+			// console.log(pos);
+
 			return pos;
 		};
 
@@ -115,15 +139,19 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 
 		rushDrop :() => {
+
+			//While candrop doesdrop, then debris
 			//rushes falling block to the floor
 		},
 
-		spawnBlock : () => {
+		spawnBlock : () => { //Should take arg for block type
 				console.log('spawning block');
 				//should spawn blocks of blockType
-				let startPos = [0, worldHeight-2]; //need buffer of two for drawing method to stay in range
+				// let startPos = [18, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-				let newBlock = new Block(startPos, BlockType.SINGLE);
+				let startPos = [18, 5]; //need buffer of two for drawing method to stay in range
+
+				let newBlock = new Block(startPos, BlockType.ORBIT);
 				blocks.push(newBlock);
 				flags.BLOCK = true; //Blocks need redraw
 		},
@@ -134,8 +162,18 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			//by eyactly one space
 		},
 
-		spinDebris : () => {
-			//slides all debris left or right
+		spinDebris : (direction) => { 
+			//TODO resolve how to deal with hitting falling blocks
+			switch (direction){
+				case 'clockwise':
+					debrisField.unshift(debrisField.pop());
+					break;
+				case 'counterClockwise':
+					debrisField.push(debrisField.shift());
+					break;
+			}
+			
+			flags.DEBRIS=true; //need redraw
 		},
 
 		rotateBlocks : () => {
@@ -154,7 +192,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 			if (state === 'playing'){
 				for (let action of actionList) {//execute actions passed
-					worldActions[action]();
+					worldActions[action.action](action.args);
 				}
 
 				//If enough time has passed drop a block
@@ -181,6 +219,15 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		setState: (newState) => {
 			state = newState;
+		},
+
+		getWorldShape: () =>
+		{
+			return {
+				x: worldWidth,
+				y: worldHeight,
+				lossHeight: lossHeight
+			}
 		}
 	}
 

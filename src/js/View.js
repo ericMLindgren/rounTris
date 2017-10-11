@@ -39,10 +39,7 @@ export default function View() {
 
 	let worldShape = { //This should be defined elsewhere but for now defines the dimensions of our world TODO
 		center: paper.view.center, //TODO really need to centralize this
-		lossHeight:8,
-		coreRadius : 25,
-		x : 20,
-		y : 15
+		coreRadius : 25 //Need to better handle drawing traits vs actual world traits
 	}; 
 
 	const updateHud = function(worldState){ //updates HUD like score, level, etc...
@@ -64,7 +61,7 @@ export default function View() {
 				}
 
 				for (let block of worldState.blocks){
-					const newBlockRep = drawAtPos(block.position() , blockStyle);
+					const newBlockRep = drawAtPos(block.position(), blockStyle);
 			        blockReps.push(newBlockRep); //add to list to remove later
 				}
 			}
@@ -79,9 +76,8 @@ export default function View() {
 					debrisReps.pop().remove();
 
 				//Draw new debris:
-				console.log(worldState.debris[0]);
-				for (let dY = 0; dY < worldShape.x; dY++){
-					for (let dX = 0; dX < worldShape.y; dX++){
+				for (let dX = 0; dX < worldShape.x; dX++){
+					for (let dY = 0; dY < worldShape.y; dY++){
 						// console.log('reading x: ' + dX + ' y: '+ dY);
 						if (worldState.debris[dX][dY]){
 							const newDebrisRep = drawAtPos({x: dX, y: dY} , debrisStyle);
@@ -102,8 +98,8 @@ export default function View() {
 
 	const drawAtPos = function(drawPos, styleOb){
 
-		console.log('drawAtPos');
-		console.log(drawPos);
+		// console.log('drawAtPos');
+		
 		//This should handle the actual drawing
 		let nextPos = drawPos.x+1; //Wrapping should be handled by world?
 		if (nextPos>worldShape.x-1) nextPos = 0; //necessary for drawing blocks that stradle world wrap line
@@ -156,7 +152,9 @@ export default function View() {
 		},
 
 		setWorldShape : function (newWorldShape){
-			worldShape = newWorldShape;
+			for (let key in newWorldShape){
+				worldShape[key] = newWorldShape[key]; //copy keys from newWorldShape
+			}
 		},
 
 		setController : function(newController){
