@@ -1,6 +1,7 @@
 //View.js --- rounTris View class
 
 import Controller from './Controller';
+import {addPoint, subPoint, pointify} from './PointHelpers';
 
 //Handles drawing game World, hud, as well as start and end screens... 
 
@@ -27,13 +28,18 @@ export default function View() {
 	let spinFlag = false; //Flags to flip if world changes so we know it needs redrawing
 	let dropFlag = false;
 
-	const worldColors = {
-		coreFill : 'blue',
+	let world = null; //Pointer to the world so I can pull dimensions and use coordinate wrapping
+					  //And make get updates directly
+
+	const worldColors = { //This should be read from a file or passed TODO
+		coreFill : 'black',//Also clean up styles to produce no borders but also no coreners TODO
 		coreStroke : 'black',
-		blockFill : 'teal',
+		blockFill : 'grey',
 		debrisFill : 'black',
+		debrisStroke: null,
+		debrisStrokeWidth: .5,
 		lossFill : 'red',
-		lossWeight : .5
+		lossStrokeWidth : .5
 	}
 
 
@@ -61,8 +67,14 @@ export default function View() {
 				}
 
 				for (let block of worldState.blocks){
-					const newBlockRep = drawAtPos(block.position(), blockStyle);
-			        blockReps.push(newBlockRep); //add to list to remove later
+					for (let piece of block.shape()){
+						let piecePos = addPoint(block.position(), piece);
+
+						piecePos = world.wrapPos(piecePos); //Make sure position is in coordinate system.
+
+						const newBlockRep = drawAtPos(piecePos, blockStyle);
+				        blockReps.push(newBlockRep); //add to list to remove later
+				    }
 				}
 			}
 
@@ -70,6 +82,8 @@ export default function View() {
 
 				const debrisStyle = {
 					fillColor : worldColors.debrisFill,
+					strokeColor : worldColors.debrisStroke,
+					strokeWidth : worldColors.debrisStrokeWidth
 				}
 
 				while (debrisReps.length > 0) //Remove all block drawings
@@ -85,15 +99,8 @@ export default function View() {
 						}
 					}
 				}
-					
-
-					
-				
-
-				//Draw new DEBRIS TODO
 			}
 		}
-
 	}
 
 	const drawAtPos = function(drawPos, styleOb){
@@ -151,6 +158,10 @@ export default function View() {
 
 		},
 
+		setWorld : (newWorld) => {
+			world = newWorld
+		},
+
 		setWorldShape : function (newWorldShape){
 			for (let key in newWorldShape){
 				worldShape[key] = newWorldShape[key]; //copy keys from newWorldShape
@@ -172,7 +183,8 @@ export default function View() {
 				center: worldShape.center,
 				sides: worldShape.x,
 				fillColor: worldColors.coreFill,
-				strokeColor: worldColors.coreStroke
+				strokeColor: worldColors.coreStroke,
+				opacity: .5 //TODO temp fix to make display more obvious
 			});
 
 			//Make outer board
@@ -195,7 +207,7 @@ export default function View() {
 			}
 
 			allLayers[worldShape.lossHeight].strokeColor = worldColors.lossFill;
-			allLayers[worldShape.lossHeight].strokeWidth = worldColors.lossWeight;
+			allLayers[worldShape.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
 
 		},
 
