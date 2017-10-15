@@ -1,9 +1,10 @@
 //Controller.js --- Controller Object for rounTris round tetris-style game
 
 // Handles keyboard input and calls world/view methods as appropriate
+import World from './World';
 
 
-export default function Controller() { //Initialize Controller with refreneces to what it controls or just point later?
+export default function Controller(argOb) { //Initialize Controller with refreneces to what it controls or just point later?
 	let view = null;
 	let world = null;
 	let actionBuffer = null;
@@ -22,9 +23,16 @@ export default function Controller() { //Initialize Controller with refreneces t
 			view.unPauseScreen();
 	};
 
+	const loseGame = () => {
+		gameState = 'loss';
+		view.lossScreen();
+	}
+
 	return {
 		startGame: () => {
 			console.log('Starting Game!!!!');
+
+			world = new World(...argOb);
 
 			view.playScreen(world.tick(actionBuffer.bufferDump(), 0));
 
@@ -33,14 +41,8 @@ export default function Controller() { //Initialize Controller with refreneces t
 			//start music
 		},
 
-		
-
 		setView: (newView) => {
 			view = newView;
-		},
-
-		setWorld: (newWorld) => {
-			world = newWorld;
 		},
 
 		setActionBuffer: (newBuffer) => {
@@ -62,6 +64,10 @@ export default function Controller() { //Initialize Controller with refreneces t
 			if (gameState == 'running' && (!PAUSED)){
 				const worldState = world.tick(actionBuffer.bufferDump(), event.delta);
 				view.tick(worldState);
+
+				if (worldState.flags.LOSS)
+					loseGame();
+			
 			}
 			// console.log('frame');
 			//Takes a tick (probably from view) with event object where event.delta = time since last tick

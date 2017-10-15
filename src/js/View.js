@@ -200,6 +200,12 @@ export default function View() {
 
 	}
 
+	const clearAllLayers = () => {
+		for (let layer of paper.project.layers){
+			clearLayer(layer);
+		}
+	}
+
 	const clearLayer = (layerToClear) => {
 		// console.log('before clearLayer: ', layerToClear.children)
 		for (let i = layerToClear.children.length-1; i>-1; i--){
@@ -207,6 +213,13 @@ export default function View() {
 			}
 		// console.log('after clearLayer: ', layerToClear.children)
 	}
+
+	const startScreen = () => {
+		clearAllLayers();
+		bigText('BEGIN', paper.view.center, controller.startGame)
+	}
+
+
 	
 	return {
 		tick: (worldState) => {
@@ -219,13 +232,12 @@ export default function View() {
 			}
 		},
 
-		startScreen: () => {
-			bigText('BEGIN', paper.view.center, controller.startGame)
-		},
+		startScreen: startScreen,
 
 		playScreen: (gameState) => {
 			clearLayer(menuLayer);
 			drawBoard(gameState);
+			setGameOpacity(1);
 		},
 
 		pauseScreen: () => {
@@ -239,6 +251,8 @@ export default function View() {
 		},
 
 		lossScreen: function(){
+			setGameOpacity(.5);
+			bigText('YOU LOSE! PLAY AGAIN?', paper.view.center, startScreen)
 
 		},
 

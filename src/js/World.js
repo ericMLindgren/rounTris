@@ -23,6 +23,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	const flags = {
 		DEBRIS : false,
 		BLOCK : false,
+		LOSS : false
 
 	}
 
@@ -144,7 +145,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		for (let rowNum = 0; rowNum < worldHeight; rowNum++){ //go through each row
 			let sum = 0;
 			for (let i = 0; i < worldWidth; i++){
-				sum += debrisField[i][rowNum]; //and add all the cells at that height
+				sum += debrisField[i][rowNum]; //and add all the cells at that y
 			}
 
 			// console.log('Sum ', sum, ' At Height: ', rowNum)
@@ -202,6 +203,16 @@ export default function World (worldWidth, worldHeight, lossHeight){
 					bitField.push(bitField.shift());
 					break;
 			}	
+	}
+
+	const checkLoss = () => {
+		for (let y = worldHeight; y >= lossHeight; y--){
+			for (let x in debrisField){
+				if (debrisField[x][y])
+					return true
+			}
+		}
+		return false;
 	}
 
 	//Semi-private Functions:
@@ -270,7 +281,6 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		spinBlocks : (direction) => {
 			for (let block of blocks) {
 				let proposedBlock = block.rotatedClone(direction);
-				console.log('SPINBLOCKS: ', proposedBlock.shape())
 				if (blockFitsIn(debrisField, proposedBlock)){
 					block.rotate(direction);
 					flags.BLOCK = true;
@@ -302,6 +312,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 
 			clearDeadBlocks(); //Clear any dead block objects
+
+			if (checkLoss())
+				flags.LOSS = true;
 
 			return {	//return world object to be passed to view for drawing
 					x: worldWidth,
