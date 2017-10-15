@@ -27,7 +27,7 @@ export default function View() {
 	const boardLayer = new paper.Layer(),
 		  blockLayer = new paper.Layer(),
 		  debrisLayer = new paper.Layer(),
-		  presentationLayer = new paper.Layer();
+		  menuLayer = new paper.Layer();
 
 
 	//GameBoard Objects
@@ -51,6 +51,52 @@ export default function View() {
 		lossFill : 'red',
 		lossStrokeWidth : .5
 	}
+
+	const drawBoard = (worldState) => {
+
+			boardLayer.activate();
+
+			if (worldCore) {
+				worldCore.remove()
+				worldCore = null;
+				while (allRings.length>0){
+					allRings.pop().remove() //remove from list and paper world. 
+				}
+			}
+
+			//Make Core
+			worldCore = new paper.Path.RegularPolygon({
+				radius: worldState.coreRadius,
+				center: paper.view.center,
+				sides: worldState.x,
+				fillColor: worldColors.coreFill,
+				strokeColor: worldColors.coreStroke,
+				opacity: .5 //TODO temp fix to make display more obvious
+			});
+
+			//Make outer board
+			for (let i = 1;i <= worldState.y;i++){
+				if (i>1) {
+					worldState.coreRadius += ((2*Math.PI*worldState.coreRadius)/worldState.x);
+				}
+					
+			 
+				const newLayer = new paper.Path.RegularPolygon({
+					radius: worldState.coreRadius,
+					center: paper.view.center,
+					sides: worldState.x,
+					// strokeColor: 'black' //remove after debugging
+				});
+				
+
+				allRings.push(newLayer);
+
+			}
+
+			allRings[worldState.lossHeight].strokeColor = worldColors.lossFill;
+			allRings[worldState.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
+
+		};
 
 	const updateBoard = function(worldState) {
 		if (worldState){ //If there's a stat object, ie change in the world
@@ -115,7 +161,6 @@ export default function View() {
 		let nextPos = drawPos.x+1; //Wrapping should be handled by world?
 		if (nextPos>worldState.x-1) nextPos = 0; //necessary for drawing blocks that stradle world wrap line
 
-		console.log('DRAWATPOS: ',drawPos)
 		//Make shape
         const newBlockRep = new paper.Path.Line(allRings[drawPos.y].segments[drawPos.x].point, allRings[drawPos.y].segments[nextPos].point);     
         newBlockRep.lineTo(allRings[drawPos.y+1].segments[nextPos].point);
@@ -130,93 +175,78 @@ export default function View() {
         return newBlockRep;
 	}
 
+	const bigText = (content, position, onClickFunction) =>
+	{
+		menuLayer.activate();
 
-	
-	return {
-		tick : function (worldState) {
-			updateBoard(worldState);
-		},
-
-		clearScreen : () => {
-			for (let i = 0; i<paper.project.activeLayer.children.length; i++){
-				paper.project.activeLayer.children[i].remove();
-			}
-		},
-
-		startScreen : function(){
-
-			var startText = new paper.PointText({ 
+		const text = new paper.PointText({ 
 			    point: paper.view.center,
-			    content: 'BEGIN',
+			    content: content,
 			    fillColor: 'black',
 			    fontFamily: 'Courier New',
 			    fontWeight: 'bold',
 			    fontSize: 50
 			});
-			startText.position = paper.view.center;
 
-			startText.onClick = controller.startGame;
+		text.position = position;
+		text.onClick = onClickFunction;
+
+	}
+
+	const setGameOpacity = (newOpacity) => {
+		blockLayer.opacity = newOpacity;
+		debrisLayer.opacity = newOpacity;
+		boardLayer.opacity = newOpacity;
+
+	}
+
+	const clearLayer = (layerToClear) => {
+		// console.log('before clearLayer: ', layerToClear.children)
+		for (let i = layerToClear.children.length-1; i>-1; i--){
+				layerToClear.children[i].remove();
+			}
+		// console.log('after clearLayer: ', layerToClear.children)
+	}
+	
+	return {
+		tick: (worldState) => {
+			updateBoard(worldState);
 		},
 
-		lossScreen : function(){
+		clearScreen: () => {
+			for (let i = 0; i<paper.project.activeLayer.children.length; i++){
+				paper.project.activeLayer.children[i].remove();
+			}
+		},
+
+		startScreen: () => {
+			bigText('BEGIN', paper.view.center, controller.startGame)
+		},
+
+		playScreen: (gameState) => {
+			clearLayer(menuLayer);
+			drawBoard(gameState);
+		},
+
+		pauseScreen: () => {
+			setGameOpacity(.2)
+			bigText('PAUSE', paper.view.center, null)	
+		},
+
+		unPauseScreen: () => {
+			clearLayer(menuLayer);
+			setGameOpacity(1);
+		},
+
+		lossScreen: function(){
 
 		},
 
-		setController : function(newController){
+		setController: (newController) => {
 			controller = newController;
 			paper.view.onKeyDown = controller.keyDown;
 			paper.view.onFrame = controller.tick;
 		},
-
-		makeHud : function() { },
-
-		drawBoard : function(worldState){
-
-			boardLayer.activate();
-
-			if (worldCore) {
-				worldCore.remove()
-				worldCore = null;
-				while (allRings.length>0){
-					allRings.pop().remove() //remove from list and paper world. 
-				}
-			}
-
-			//Make Core
-			worldCore = new paper.Path.RegularPolygon({
-				radius: worldState.coreRadius,
-				center: paper.view.center,
-				sides: worldState.x,
-				fillColor: worldColors.coreFill,
-				strokeColor: worldColors.coreStroke,
-				opacity: .5 //TODO temp fix to make display more obvious
-			});
-
-			//Make outer board
-			for (let i = 1;i <= worldState.y;i++){
-				if (i>1) {
-					worldState.coreRadius += ((2*Math.PI*worldState.coreRadius)/worldState.x);
-				}
-					
-			 
-				const newLayer = new paper.Path.RegularPolygon({
-					radius: worldState.coreRadius,
-					center: paper.view.center,
-					sides: worldState.x,
-					// strokeColor: 'black' //remove after debugging
-				});
-				
-
-				allRings.push(newLayer);
-
-			}
-
-			allRings[worldState.lossHeight].strokeColor = worldColors.lossFill;
-			allRings[worldState.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
-
-		},
-
-
 	}
 }
 

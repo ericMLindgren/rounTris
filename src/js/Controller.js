@@ -15,14 +15,18 @@ export default function Controller() { //Initialize Controller with refreneces t
 	const togglePause = () => {
 		console.log('PAUSE/UNPAUSE');
 		PAUSED = !PAUSED;
+
+		if (PAUSED)
+			view.pauseScreen();
+		else
+			view.unPauseScreen();
 	};
 
 	return {
 		startGame: () => {
 			console.log('Starting Game!!!!');
 
-			view.clearScreen();
-			view.drawBoard(world.tick(actionBuffer.bufferDump(), 0));
+			view.playScreen(world.tick(actionBuffer.bufferDump(), 0));
 
 			gameState = 'running'; //Feels weird this isn't a function TODO
 			//Start loop
