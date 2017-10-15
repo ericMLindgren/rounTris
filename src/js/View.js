@@ -23,6 +23,13 @@ export default function View() {
 	let spinFlag = false; //Flags to flip if world changes so we know it needs redrawing
 	let dropFlag = false;
 
+
+	const boardLayer = new paper.Layer(),
+		  blockLayer = new paper.Layer(),
+		  debrisLayer = new paper.Layer(),
+		  presentationLayer = new paper.Layer();
+
+
 	//GameBoard Objects
 	let worldCore = null; 
 	const allRings = []; //list of each paper.Path.RegularPolygon that form the worlds rings
@@ -30,6 +37,8 @@ export default function View() {
 	//Game Block objects
 	const blockReps = []; //Lists to collect our paper items for easy removal later
 	const debrisReps = [];
+
+
 
 
 	const worldColors = { //This should be read from a file or passed TODO
@@ -46,6 +55,8 @@ export default function View() {
 	const updateBoard = function(worldState) {
 		if (worldState){ //If there's a stat object, ie change in the world
 			if (worldState.flags.BLOCK) {
+
+				blockLayer.activate();
 
 				//Set drawing style for block
 				const blockStyle = { //TODO this could be handled better maybe even using functions for values to allow for animation, would mean rethinking redraw rate.
@@ -70,6 +81,8 @@ export default function View() {
 			}
 
 			if (worldState.flags.DEBRIS) {
+
+				debrisLayer.activate();
 
 				const debrisStyle = {
 					fillColor : worldColors.debrisFill,
@@ -102,6 +115,7 @@ export default function View() {
 		let nextPos = drawPos.x+1; //Wrapping should be handled by world?
 		if (nextPos>worldState.x-1) nextPos = 0; //necessary for drawing blocks that stradle world wrap line
 
+		console.log('DRAWATPOS: ',drawPos)
 		//Make shape
         const newBlockRep = new paper.Path.Line(allRings[drawPos.y].segments[drawPos.x].point, allRings[drawPos.y].segments[nextPos].point);     
         newBlockRep.lineTo(allRings[drawPos.y+1].segments[nextPos].point);
@@ -120,7 +134,6 @@ export default function View() {
 	
 	return {
 		tick : function (worldState) {
-			// updateHud(worldState);
 			updateBoard(worldState);
 		},
 
@@ -157,11 +170,13 @@ export default function View() {
 
 		makeHud : function() { },
 
-		drawBoard : function(worldState){ 
+		drawBoard : function(worldState){
+
+			boardLayer.activate();
+
 			if (worldCore) {
 				worldCore.remove()
 				worldCore = null;
-
 				while (allRings.length>0){
 					allRings.pop().remove() //remove from list and paper world. 
 				}

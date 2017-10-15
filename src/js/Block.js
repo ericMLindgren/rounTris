@@ -7,22 +7,12 @@ import {addPoint, subPoint, pointify} from './PointHelpers';
 export default function Block(pos, propOb, startID){ //{position:,shape:,momentum:}
 
 	let position = pointify(pos);
-	let blockShape = null;
-	let momentum = null;
-	let id = startID;
+	const blockShape = propOb.shape;
+	const momentum = propOb.momentum;
+	const id = startID;
+
+
 	//TODO put appearance details in here so that view can draw unique shapes
-
-
-	if (propOb.momentum == undefined)
-		momentum = pointify([0,-1]) //Dropping at normal rate
-	else
-		momentum = propOb.momentum
-
-
-	if (propOb.shape == undefined)
-		blockShape = [[0,0],[1,0],[2,0],[3,0]];
-	else
-		blockShape = propOb.shape;
 
 	return {
 
@@ -39,10 +29,6 @@ export default function Block(pos, propOb, startID){ //{position:,shape:,momentu
 			position = newPos;
 		},
 
-		// transformBy: (transVec) => { //not sure if this is useful since world has to handle coordinate wrapping anyways
-		// 	position = addPoint(position,transVec);
-		// },
-
 		rotatedClone: (direction) => {
 			let newShape = [];
 			for (let piece of blockShape){
@@ -58,7 +44,7 @@ export default function Block(pos, propOb, startID){ //{position:,shape:,momentu
 				}
 			}
 
-			return new Block(position, newShape); //Expensive to create new blocks for each rotation? QUESTION
+			return new Block(position, {shape: newShape}); 
 		},
 
 		rotate : (direction) => {

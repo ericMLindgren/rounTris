@@ -57,8 +57,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				flags.DEBRIS = true;
 			}
 
-		if (blocks.length > 0)
-			console.log('dropTick, blocks: ', blocks);
+		// if (blocks.length > 0)
+			// console.log('dropTick, blocks: ', blocks);
 		for (let block of blocks){ //infinite falling
 			if (canDrop(block))
 				dropBlock(block);
@@ -84,8 +84,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		for (let piece of block.shape()){
 			let piecePos = addPoint(nextPos, piece);
 
-			
-			console.log(wrapPos(piecePos));
+			wrapPos(piecePos)
+
+			// console.log(wrapPos(piecePos));
 
 			if ( (debrisField[piecePos.x][piecePos.y]) || piecePos.y < 0)
 				return false;
@@ -102,7 +103,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 			wrapPos(piecePos);
 
-			if (bitField[piecePos.x][piecePos.y])
+			console.log('BLOCKFITS ', piecePos)
+			if (bitField[piecePos.x][piecePos.y] || piecePos.y < 0)
 				return false;
 		}
 
@@ -175,8 +177,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		}
 	};
 
-	const wrapPos = (pos) => { //helper method to put x in world and facilitate coordinate wrapping
-			//TODO maybe broken....
+	const wrapPos = (pos) => { 
+			//TODO Take away side effects
 
 			pos = pointify(pos);
 
@@ -268,6 +270,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		spinBlocks : (direction) => {
 			for (let block of blocks) {
 				let proposedBlock = block.rotatedClone(direction);
+				console.log('SPINBLOCKS: ', proposedBlock.shape())
 				if (blockFitsIn(debrisField, proposedBlock)){
 					block.rotate(direction);
 					flags.BLOCK = true;
