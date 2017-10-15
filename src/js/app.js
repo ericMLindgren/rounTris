@@ -28,12 +28,6 @@ controller.setView(view);
 controller.setWorld(world);
 controller.setActionBuffer(actionBuffer);
 
-view.setWorld(world);
-
-view.setWorldShape(world.getWorldShape()); //Necessary to get dimensions for drawing
-										   //deprecate! TODO
-
-
 view.setController(controller);
 
 view.startScreen();

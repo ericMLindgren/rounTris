@@ -20,16 +20,17 @@ export default function View() {
 
 	let controller = null; //Pointer to the controller so we can pass view events
 
-	const allLayers = []; //list of each paper.Path.RegularPolygon that form the worlds rings
-
-	const blockReps = []; //Lists to collect our paper items for easy removal later
-	const debrisReps = [];
-
 	let spinFlag = false; //Flags to flip if world changes so we know it needs redrawing
 	let dropFlag = false;
 
-	let world = null; //Pointer to the world so I can pull dimensions and use coordinate wrapping
-					  //And make get updates directly
+	//GameBoard Objects
+	let worldCore = null; 
+	const allRings = []; //list of each paper.Path.RegularPolygon that form the worlds rings
+
+	//Game Block objects
+	const blockReps = []; //Lists to collect our paper items for easy removal later
+	const debrisReps = [];
+
 
 	const worldColors = { //This should be read from a file or passed TODO
 		coreFill : 'black',//Also clean up styles to produce no borders but also no coreners TODO
@@ -40,16 +41,6 @@ export default function View() {
 		debrisStrokeWidth: .5,
 		lossFill : 'red',
 		lossStrokeWidth : .5
-	}
-
-
-	let worldShape = { //This should be defined elsewhere but for now defines the dimensions of our world TODO
-		center: paper.view.center, //TODO really need to centralize this
-		coreRadius : 25 //Need to better handle drawing traits vs actual world traits
-	}; 
-
-	const updateHud = function(worldState){ //updates HUD like score, level, etc...
-
 	}
 
 	const updateBoard = function(worldState) {
@@ -70,9 +61,9 @@ export default function View() {
 					for (let piece of block.shape()){
 						let piecePos = addPoint(block.position(), piece);
 
-						piecePos = world.wrapPos(piecePos); //Make sure position is in coordinate system.
+						piecePos = worldState.wrapPos(piecePos); //Make sure position is in coordinate system.
 
-						const newBlockRep = drawAtPos(piecePos, blockStyle);
+						const newBlockRep = drawAtPos(piecePos, blockStyle, worldState);
 				        blockReps.push(newBlockRep); //add to list to remove later
 				    }
 				}
@@ -90,11 +81,11 @@ export default function View() {
 					debrisReps.pop().remove();
 
 				//Draw new debris:
-				for (let dX = 0; dX < worldShape.x; dX++){
-					for (let dY = 0; dY < worldShape.y; dY++){
+				for (let dX = 0; dX < worldState.x; dX++){
+					for (let dY = 0; dY < worldState.y; dY++){
 						// console.log('reading x: ' + dX + ' y: '+ dY);
 						if (worldState.debris[dX][dY]){
-							const newDebrisRep = drawAtPos({x: dX, y: dY} , debrisStyle);
+							const newDebrisRep = drawAtPos({x: dX, y: dY} , debrisStyle, worldState);
 			        		debrisReps.push(newDebrisRep); //add to list to remove later
 						}
 					}
@@ -103,18 +94,18 @@ export default function View() {
 		}
 	}
 
-	const drawAtPos = function(drawPos, styleOb){
+	const drawAtPos = function(drawPos, styleOb, worldState){
 
 		// console.log('drawAtPos');
 		
 		//This should handle the actual drawing
 		let nextPos = drawPos.x+1; //Wrapping should be handled by world?
-		if (nextPos>worldShape.x-1) nextPos = 0; //necessary for drawing blocks that stradle world wrap line
+		if (nextPos>worldState.x-1) nextPos = 0; //necessary for drawing blocks that stradle world wrap line
 
 		//Make shape
-        const newBlockRep = new paper.Path.Line(allLayers[drawPos.y].segments[drawPos.x].point, allLayers[drawPos.y].segments[nextPos].point);     
-        newBlockRep.lineTo(allLayers[drawPos.y+1].segments[nextPos].point);
-        newBlockRep.lineTo(allLayers[drawPos.y+1].segments[drawPos.x].point);
+        const newBlockRep = new paper.Path.Line(allRings[drawPos.y].segments[drawPos.x].point, allRings[drawPos.y].segments[nextPos].point);     
+        newBlockRep.lineTo(allRings[drawPos.y+1].segments[nextPos].point);
+        newBlockRep.lineTo(allRings[drawPos.y+1].segments[drawPos.x].point);
         newBlockRep.closePath();
 
         //Apply styles
@@ -129,7 +120,7 @@ export default function View() {
 	
 	return {
 		tick : function (worldState) {
-			updateHud(worldState);
+			// updateHud(worldState);
 			updateBoard(worldState);
 		},
 
@@ -142,30 +133,20 @@ export default function View() {
 		startScreen : function(){
 
 			var startText = new paper.PointText({ 
-			    point: worldShape.center,
+			    point: paper.view.center,
 			    content: 'BEGIN',
 			    fillColor: 'black',
 			    fontFamily: 'Courier New',
 			    fontWeight: 'bold',
 			    fontSize: 50
 			});
-			startText.position = worldShape.center;
+			startText.position = paper.view.center;
 
 			startText.onClick = controller.startGame;
 		},
 
 		lossScreen : function(){
 
-		},
-
-		setWorld : (newWorld) => {
-			world = newWorld
-		},
-
-		setWorldShape : function (newWorldShape){
-			for (let key in newWorldShape){
-				worldShape[key] = newWorldShape[key]; //copy keys from newWorldShape
-			}
 		},
 
 		setController : function(newController){
@@ -176,38 +157,47 @@ export default function View() {
 
 		makeHud : function() { },
 
-		makeBoard : function(){ 
+		drawBoard : function(worldState){ 
+			if (worldCore) {
+				worldCore.remove()
+				worldCore = null;
+
+				while (allRings.length>0){
+					allRings.pop().remove() //remove from list and paper world. 
+				}
+			}
+
 			//Make Core
-			const worldCore = new paper.Path.RegularPolygon({
-				radius: worldShape.coreRadius,
-				center: worldShape.center,
-				sides: worldShape.x,
+			worldCore = new paper.Path.RegularPolygon({
+				radius: worldState.coreRadius,
+				center: paper.view.center,
+				sides: worldState.x,
 				fillColor: worldColors.coreFill,
 				strokeColor: worldColors.coreStroke,
 				opacity: .5 //TODO temp fix to make display more obvious
 			});
 
 			//Make outer board
-			for (let i = 1;i <= worldShape.y;i++){
+			for (let i = 1;i <= worldState.y;i++){
 				if (i>1) {
-					worldShape.coreRadius += ((2*Math.PI*worldShape.coreRadius)/worldShape.x);
+					worldState.coreRadius += ((2*Math.PI*worldState.coreRadius)/worldState.x);
 				}
 					
 			 
 				const newLayer = new paper.Path.RegularPolygon({
-					radius: worldShape.coreRadius,
-					center: worldShape.center,
-					sides: worldShape.x,
+					radius: worldState.coreRadius,
+					center: paper.view.center,
+					sides: worldState.x,
 					// strokeColor: 'black' //remove after debugging
 				});
 				
 
-				allLayers.push(newLayer);
+				allRings.push(newLayer);
 
 			}
 
-			allLayers[worldShape.lossHeight].strokeColor = worldColors.lossFill;
-			allLayers[worldShape.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
+			allRings[worldState.lossHeight].strokeColor = worldColors.lossFill;
+			allRings[worldState.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
 
 		},
 

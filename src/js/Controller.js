@@ -22,7 +22,7 @@ export default function Controller() { //Initialize Controller with refreneces t
 			console.log('Starting Game!!!!');
 
 			view.clearScreen();
-			view.makeBoard();
+			view.drawBoard(world.tick(actionBuffer.bufferDump(), 0));
 
 			gameState = 'running'; //Feels weird this isn't a function TODO
 			//Start loop

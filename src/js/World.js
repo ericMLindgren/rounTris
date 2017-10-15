@@ -71,13 +71,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	}
 
 	const clearDeadBlocks = () => { //refactor this for clarity TODO
-		if (deadBlockIndices.length > 0) {
-			for (let i = deadBlockIndices.length-1; i >= 0; i--){
-				console.log('clearing block at blocks[ ', i, ' ]')
-				blocks.splice(deadBlockIndices[i],1);
-				deadBlockIndices.splice(deadBlockIndices.indexOf(i),1);
+			while (deadBlockIndices.length>0){
+				blocks.splice(deadBlockIndices.pop(),1);
+
 			}
-		}
 
 	}
 
@@ -283,21 +280,11 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	//Return interface object:
 	return {
 
-		wrapPos	: (position) => wrapPos(position),
-
 		tick: (actionList, delta) => {
 			
 			for (let flag in flags){ //Reset change flags each cycle
 				flags[flag] = false;
 			}
-
-			//Clear complete debris:
-			// let rowsToDestroy = completedRows();
-			// if (rowsToDestroy.length > 0){
-			// 	destroyRows(rowsToDestroy);
-			// 	flags.DEBRIS = true;
-			// }
-			//TODO create object to pass to View to animate distruction
 
 		
 			for (let action of actionList) {//execute actions passed
@@ -312,21 +299,19 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 
 			clearDeadBlocks(); //Clear any dead block objects
-			if (flags.DEBRIS || flags.BLOCK){ //If anything has changed
 
-				
-							//TODO return list of recently destroyed blocks
-							//and debris so that view can animate destruction
-							//if it wants to 
+			return {	//return world object to be passed to view for drawing
+					x: worldWidth,
+					y: worldHeight,
+					flags : flags,
+					debris: debrisField,
+					blocks: blocks,
+					lossHeight: lossHeight,
+					//not sure about below items here
+					coreRadius: 25,
+					wrapPos: wrapPos
 
-				return {	//return world object to be passed to view for drawing
-						flags : flags,
-						debris: debrisField,
-						blocks: blocks 
-				}
-			}
-
-			
+			}		
 		},
 
 
