@@ -2,18 +2,17 @@
 
 
 import Block from './Block';
-import {addPoints, subPoints, pointify} from './PointHelpers';
+import {addPoints, subPoints, pointify, getRandomInt} from './PointHelpers';
 
 
-const BlockType = { //TODO would like to have blocks implement behaviors,
-					//not sure what the best route for this is
-	SINGLE: {shape:[[0,0]], momentum:[0,-1]},
-	METEOR: {shape:[[0,0]], momentum:[1,-1]},
-	ORBIT:  {shape:[[0,0]], momentum:[1,0]},
-	WARP:   {shape:[[0,0]], momentum:[0,-2]},
-	T:      {shape:[[-1,0],[0,0],[1,0],[0,1]], momentum:[0,-1]},
-	L:      4
-}
+const BlockTypes = [
+	{shape:[[0,0]], momentum:[1,-1]}, //Meteor
+	{shape:[[0,-2],[0,-1],[0,0],[0,1]], momentum:[0,-1]}, // I
+	{shape:[[-1,0],[0,0],[0,1],[0,2]], momentum:[0,-1]}, // L 
+	{shape:[[-1,0],[0,0],[1,0],[0,1]], momentum:[0,-1]}, // T:
+	{shape:[[-1,0],[0,0],[0,1],[1,1]], momentum:[0,-1]}, // Z      
+	{shape:[[-1,0],[0,0],[-1,1],[0,1]], momentum:[0,-1]}, // O      
+]
 
 
 export default function World (worldWidth, worldHeight, lossHeight){
@@ -31,10 +30,19 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 	}
 
-	let genRate = 1; //rate at which blocks are generated
+	let rowsDestroyed = 0;
+
+	let inMeteorShower = false;
+	let meteorCap = 10;
+	let meteorCount = 0;
+	let meteorRate = .8;
+
+	let startSpawnRate = 3; //rate at which blocks are generated
+	let spawnRate = startSpawnRate;
 	let dropRate = .3; //rate at which they drop
 
 	let dropTimer = 0; //how much time has passed since the last time we dropped a block.
+	let spawnTimer = 0; 
 
 	const blocks = [];
 	
@@ -173,6 +181,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		for (let rowNum of rowNumArray){
 			for (let i = worldWidth-1; i >= 0; i--){
 				debrisField[i].splice(rowNum,1);
+				rowsDestroyed++;
 			} 
 		}
 
@@ -222,6 +231,19 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		return false;
 	}
 
+	const startMeteorShower = () => {
+		spawnRate = meteorRate;
+		inMeteorShower = true;
+	}
+
+	const endMeteorShower = () => {
+		spawnRate = startSpawnRate;
+		meteorCount = 0;
+		inMeteorShower = false;
+		rowsDestroyed++
+
+	}
+
 	//Semi-private Functions:
 	const worldActions = {
 
@@ -232,37 +254,64 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 
 		rushDrop :() => {
-			let lowestBlock = null;
+			if (blocks.length>0){
+				let lowestBlock = null;
 
-			//Find the lowest falling block
-			for (let block of blocks) { 
-				if (!lowestBlock)
-					lowestBlock = block;
-				else 
-					if (lowestBlock.position().y > block.position().y)
+				//Find the lowest falling block
+				for (let block of blocks) { 
+					if (!lowestBlock)
 						lowestBlock = block;
+					else 
+						if (lowestBlock.position().y > block.position().y)
+							lowestBlock = block;
+				}
+
+				//And drop it
+
+				while (canDrop(lowestBlock))
+					dropBlock(lowestBlock)
+
+				makeDebrisFromBlock(lowestBlock);
 			}
-
-			//And drop it
-
-			while (canDrop(lowestBlock))
-				dropBlock(lowestBlock)
-
-			makeDebrisFromBlock(lowestBlock);
 		},
 
-		spawnBlock : () => { //Should take arg for block type
-				console.log('spawning block');
-				//should spawn blocks of blockType
-				// let startPos = [18, worldHeight-2]; //need buffer of two for drawing method to stay in range
+		spawnTick : () => { //Should take arg for block type
+				console.log('METERO SHOWER? ', inMeteorShower);
+				//Start a meteor shower?
+				if (rowsDestroyed%6==0)
+					startMeteorShower();
 
-				let startPos = [19, worldHeight-2]; //need buffer of two for drawing method to stay in range
+				//Make meteor if we're mid meteor shower 
+				if (inMeteorShower) { //Abstract to level manager class TODO 
+					const randomX = getRandomInt(0,worldWidth);
+					let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-				let newBlock = new Block(startPos, BlockType.T, blocksMade);
-				blocksMade++;
-				blocks.push(newBlock);
-				flags.BLOCK = true; //Blocks need redraw
-				flags.BLOCKSPAWNED = true;
+					let newBlock = new Block(startPos, BlockTypes[0], blocksMade);
+					blocksMade++;
+					blocks.push(newBlock);
+					flags.BLOCK = true; //Blocks need redraw
+					flags.BLOCKSPAWNED = true;
+					spawnTimer = 0;
+
+					meteorCount++;
+					if (meteorCount == meteorCap)
+						endMeteorShower();
+
+				}
+				//If we're not in a meteor shower
+				else {
+					const randomBlockType = BlockTypes[getRandomInt(1,BlockTypes.length)];
+					const randomX = getRandomInt(0,worldWidth);
+
+					let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
+
+					let newBlock = new Block(startPos, randomBlockType, blocksMade);
+					blocksMade++;
+					blocks.push(newBlock);
+					flags.BLOCK = true; //Blocks need redraw
+					flags.BLOCKSPAWNED = true;
+					spawnTimer = 0;
+				}
 		},
 
 		spawnRow : () => { //for debugging only
@@ -273,7 +322,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				for (let i = 0; i < worldWidth; i++){
 					let startPos = [i, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-					let newBlock = new Block(startPos, BlockType.SINGLE, blocksMade);
+					let newBlock = new Block(startPos, BlockTypes.SINGLE, blocksMade);
 					blocksMade++;
 					blocks.push(newBlock);
 					flags.BLOCK = true; //Blocks need redraw
@@ -353,6 +402,11 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			dropTimer += delta;
 			if (dropTimer > dropRate) {
 				dropTick();
+			}
+
+			spawnTimer += delta;
+			if (spawnTimer > spawnRate) {
+				worldActions.spawnTick();
 			}
 
 

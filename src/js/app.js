@@ -5,7 +5,7 @@ import Controller from './Controller';
 import ActionBuffer from './ActionBuffer';
 import SoundManager from './SoundManager';
 
-const controller = new Controller([20,15,8]);
+const controller = new Controller([20,15,12]);
 const view = new View();
 
 const keyLayout = { //Learn how to pass arguments in this scheme TODO

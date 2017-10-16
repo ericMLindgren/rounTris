@@ -42,8 +42,8 @@ export default function View() {
 
 
 	const worldColors = { //This should be read from a file or passed TODO
-		coreFill : 'midnightblue',//Also clean up styles to produce no borders but also no coreners TODO
-		coreStroke : 'midnightblue',
+		coreFill : 'white',//Also clean up styles to produce no borders but also no coreners TODO
+		coreStroke : 'black',
 		blockFill : 'grey',
 		debrisFill : 'black',
 		debrisStroke: null,
