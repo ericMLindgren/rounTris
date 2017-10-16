@@ -175,23 +175,25 @@ export default function View() {
         return newBlockRep;
 	}
 
-	const bigText = (content, position, onClickFunction) =>
+	const textButton = (propOb) =>
 	{
 		menuLayer.activate();
 
 		const text = new paper.PointText({ 
 			    point: paper.view.center,
-			    content: content,
+			    content: propOb.content,
 			    fillColor: 'black',
 			    fontFamily: 'Courier New',
 			    fontWeight: 'bold',
-			    fontSize: 50
+			    fontSize: propOb.size
 			});
 
-		text.position = position;
-		text.onClick = onClickFunction;
+		text.position = propOb.position;
+		text.onClick = propOb.callback;
 
 	}
+
+
 
 	const setGameOpacity = (newOpacity) => {
 		blockLayer.opacity = newOpacity;
@@ -216,7 +218,12 @@ export default function View() {
 
 	const startScreen = () => {
 		clearAllLayers();
-		bigText('BEGIN', paper.view.center, controller.startGame)
+		// textButton('BEGIN', paper.view.center, controller.startGame)
+		textButton({
+				content: 'BEGIN', 
+				position: paper.view.center,
+				size: 50,
+				callback: controller.startGame});
 	}
 
 
@@ -242,7 +249,11 @@ export default function View() {
 
 		pauseScreen: () => {
 			setGameOpacity(.2)
-			bigText('PAUSE', paper.view.center, null)	
+			textButton({
+				content: 'PAUSE', 
+				position: paper.view.center,
+				size: 50,
+				callback: null});
 		},
 
 		unPauseScreen: () => {
@@ -252,7 +263,18 @@ export default function View() {
 
 		lossScreen: function(){
 			setGameOpacity(.5);
-			bigText('YOU LOSE! PLAY AGAIN?', paper.view.center, startScreen)
+			// textButton('YOU LOSE! PLAY AGAIN?', paper.view.center, startScreen)
+			textButton({
+				content: 'YOU LOSE!', 
+				position: paper.view.center,
+				size: 50,
+				callback: startScreen});
+
+			textButton({
+				content: 'PLAY AGAIN?', 
+				position: addPoints(paper.view.center, [0,40]),
+				size: 25,
+				callback: startScreen});
 
 		},
 
