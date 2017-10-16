@@ -39,9 +39,11 @@ export default function Controller(argOb) { //Controller is initialized with dim
 
 	const loseGame = () => {
 		gameState = 'loss';
-		
-
 		playMusic.stop();
+
+		soundManager.playSound('game_over', 1, false);
+		playMusic = soundManager.playSound('space_music', 1, false);
+
 		view.lossScreen();
 	}
 
@@ -52,6 +54,8 @@ export default function Controller(argOb) { //Controller is initialized with dim
 			world = new World(...argOb);
 
 			view.playScreen(world.tick(actionBuffer.bufferDump(), 0));
+			if (playMusic)
+				playMusic.stop();
 			playMusic = soundManager.playSound('play_music', 1, true); //play on a loop
 
 			gameState = 'running'; //Feels weird this isn't a function TODO
@@ -93,6 +97,9 @@ export default function Controller(argOb) { //Controller is initialized with dim
 				
 				if (worldState.flags.BLOCKSPUN)
 					soundManager.playSound('blockSpun'); //increase pitch the higher the block lands				
+				// if (worldState.flags.DEBRISSPUN){ //spin noise is too abrassive
+				// 	soundManager.playSound('debrisSpun'); //increase pitch the higher the block lands				
+				// }
 				if (worldState.flags.BLOCKHIT)
 					soundManager.playSound('blockLanded', 1+worldState.flags.BLOCKHIT/10) //increase pitch the higher the block lands
 				if (worldState.flags.ROWSDESTROYED)

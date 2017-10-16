@@ -5,8 +5,7 @@ import Controller from './Controller';
 import ActionBuffer from './ActionBuffer';
 import SoundManager from './SoundManager';
 
-const controller = new Controller([20,15,12]);
-const view = new View();
+
 
 const keyLayout = { //Learn how to pass arguments in this scheme TODO
 	'left' : {action: 'spinDebris', args:'counterClockwise'},
@@ -26,9 +25,13 @@ const soundSources = {
     "blockLanded": "./sounds/26777__junggle__btn402.mp3",
     "blockSpun": "./sounds/192273__lebcraftlp__click.wav",
     "play_music": "./sounds/384468__frankum__vintage-elecro-pop-loop.mp3",
-    "space_music": "./sounds/33796__yewbic__ambience03.wav"
-
+    "space_music": "./sounds/33796__yewbic__ambience03.wav",
+    "game_over": "./sounds/173859__jivatma07__j1game-over-mono.wav",
+    "debrisSpun": "./sounds/15545__lagthenoggin__reload_shortened.wav"
 }
+
+const controller = new Controller([20,15,9]);
+const view = new View();
 
 
 const actionBuffer = new ActionBuffer(keyLayout);

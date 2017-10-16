@@ -22,6 +22,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	const flags = {
 		ROWSDESTROYED: false,
 		BLOCKSPAWNED: false,
+		DEBRISSPUN: false,
 		BLOCKSPUN: false,
 		BLOCKHIT : false,
 		DEBRIS : false,
@@ -278,8 +279,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		spawnTick : () => { //Should take arg for block type
 				console.log('METERO SHOWER? ', inMeteorShower);
 				//Start a meteor shower?
-				if (rowsDestroyed%6==0)
-					startMeteorShower();
+				// if (rowsDestroyed%6==0)	//Meteor showers currently disabled
+				// 	startMeteorShower();
 
 				//Make meteor if we're mid meteor shower 
 				if (inMeteorShower) { //Abstract to level manager class TODO 
@@ -363,11 +364,13 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			for (let block of blocks) {
 				if (!blockFitsIn(debrisField, block)){ //If any blocks are bumped
 					block.moveTo(wrapPos(addPoints(block.position(),[modDir,0]))) //Move them in the same directions as we spin
+					flags.BLOCK = true;
 				}
 			}
 
-			flags.BLOCK = true;
+			
 			flags.DEBRIS = true;
+			flags.DEBRISSPUN = true;
 		},
 
 		spinBlocks : (direction) => {
