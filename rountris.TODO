@@ -1,5 +1,8 @@
 rountris TODOS
 
+Load Screen
+
+
 //GRAPHICAL
 pulsing loss height would be nice, maybe pulsing world.
 
@@ -11,6 +14,7 @@ different block colors and different debris colors
 Score/levels
 
 Need to abstract SoundManager better. Too intermingled with Control class
+
 
 
 
