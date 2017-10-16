@@ -49,7 +49,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		}
 	}
 
-	// console.log(debrisField);
+	debrisField[0][0] = 1; //This give player a sense of control before the blocks start dropping...
+	
+	
 
 	//Totally Private Functions
 	const dropTick = () => {
@@ -90,7 +92,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		for (let piece of block.shape()){
 			let piecePos = addPoints(nextPos, piece);
 
-			wrapPos(piecePos)
+			piecePos = wrapPos(piecePos);
 
 			// console.log(wrapPos(piecePos));
 
@@ -107,9 +109,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 			let piecePos = addPoints(block.position(), piece);
 
-			wrapPos(piecePos);
+			piecePos = wrapPos(piecePos);
 
-			console.log('BLOCKFITS ', piecePos)
 			if (bitField[piecePos.x][piecePos.y] || piecePos.y < 0)
 				return false;
 		}
@@ -131,13 +132,13 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		//Should take a block and remove it, then convert each piece to debris 
 		for (let piece of block.shape()){
 			let debrisPos = addPoints(piece, block.position());
-			wrapPos(debrisPos) //Maps debrisPos to Coordinate system
+			debrisPos = wrapPos(debrisPos) //Maps debrisPos to Coordinate system
 			debrisField[debrisPos.x][debrisPos.y]=1;
 		}
 
 		deadBlockIndices.push(blocks.indexOf(block)); //flag block for garbage collection
 
-		flags.BLOCKHIT = block.position().y; //lets us vary playback rate of FX based on height of impact
+		flags.BLOCKHIT = block.position().y+1; //lets us vary playback rate of FX based on height of impact
 		flags.DEBRIS = true; //Debris needs redraw
 		flags.BLOCK = true; //need to remove dead blocks
 
@@ -188,6 +189,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 			pos = pointify(pos);
 
+
 			if (pos.x < 0)
 				pos.x = worldWidth + pos.x;
 			else if (pos.x >= worldWidth)
@@ -230,9 +232,23 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 
 		rushDrop :() => {
+			let lowestBlock = null;
 
-			//While candrop doesdrop, then debris
-			//rushes falling block to the floor
+			//Find the lowest falling block
+			for (let block of blocks) { 
+				if (!lowestBlock)
+					lowestBlock = block;
+				else 
+					if (lowestBlock.position().y > block.position().y)
+						lowestBlock = block;
+			}
+
+			//And drop it
+
+			while (canDrop(lowestBlock))
+				dropBlock(lowestBlock)
+
+			makeDebrisFromBlock(lowestBlock);
 		},
 
 		spawnBlock : () => { //Should take arg for block type
@@ -249,7 +265,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				flags.BLOCKSPAWNED = true;
 		},
 
-		spawnRow : () => { //Should take arg for block type
+		spawnRow : () => { //for debugging only
 				console.log('spawning row');
 				//should spawn blocks of blockType
 				// let startPos = [18, worldHeight-2]; //need buffer of two for drawing method to stay in range
@@ -319,6 +335,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 	
 	//Return interface object:
+	let hasTicked = false;
 	return {
 
 		tick: (actionList, delta) => {
@@ -343,6 +360,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 			if (checkLoss())
 				flags.LOSS = true;
+
+			if (!hasTicked) //draw debris on the very first tick
+				flags.DEBRIS = true;
 
 			return {	//return world object to be passed to view for drawing
 					x: worldWidth,

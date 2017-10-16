@@ -10,6 +10,9 @@ export default function Controller(argOb) { //Controller is initialized with dim
 	let actionBuffer = null;
 	let soundManager = null;
 
+
+	let pauseMusic = null;
+	let endMusic = null;
 	let playMusic = null;
 
 	let gameState = 'stopped'
@@ -20,15 +23,23 @@ export default function Controller(argOb) { //Controller is initialized with dim
 		console.log('PAUSE/UNPAUSE');
 		PAUSED = !PAUSED;
 
-		if (PAUSED)
+		if (PAUSED){
+			playMusic.stop()
+			pauseMusic = soundManager.playSound('space_music', 2, true)
+			
 			view.pauseScreen();
-		else
+		}
+		else{
+			pauseMusic.stop();
+			playMusic = soundManager.playSound('play_music', 1, true)
+
 			view.unPauseScreen();
+		}
 	};
 
 	const loseGame = () => {
 		gameState = 'loss';
-		soundManager.playSound('end_music', 1, true)
+		
 
 		playMusic.stop();
 		view.lossScreen();
