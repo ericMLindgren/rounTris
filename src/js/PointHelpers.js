@@ -2,10 +2,11 @@
 //Helper functions to easy point maths
 
 export function pointify(pointOrArray){
+	
 	if (pointOrArray instanceof Array)
-		pointOrArray = {x: pointOrArray[0], y: pointOrArray[1]}
-
-	return pointOrArray;
+		return {x: pointOrArray[0], y: pointOrArray[1]}
+	else 
+		return pointOrArray;
 }
 
 
