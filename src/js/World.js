@@ -2,7 +2,7 @@
 
 
 import Block from './Block';
-import {addPoint, subPoint, pointify} from './PointHelpers';
+import {addPoints, subPoints, pointify} from './PointHelpers';
 
 
 const BlockType = { //TODO would like to have blocks implement behaviors,
@@ -21,6 +21,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	let blocksMade = 1; //Used to generate ID #
 
 	const flags = {
+		ROWSDESTROYED: false,
+		BLOCKSPAWNED: false,
+		BLOCKSPUN: false,
+		BLOCKHIT : false,
 		DEBRIS : false,
 		BLOCK : false,
 		LOSS : false
@@ -56,6 +60,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			if (rowsToDestroy.length > 0){
 				destroyRows(rowsToDestroy);
 				flags.DEBRIS = true;
+				flags.ROWSDESTROYED = true
 			}
 
 		// if (blocks.length > 0)
@@ -80,10 +85,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	}
 
 	const canDrop = function(block){ //Maybe deprecate for blockFitsIn(debrisField)? TODO
-		let nextPos = addPoint(block.position(), block.momentum()); 
+		let nextPos = addPoints(block.position(), block.momentum()); 
 
 		for (let piece of block.shape()){
-			let piecePos = addPoint(nextPos, piece);
+			let piecePos = addPoints(nextPos, piece);
 
 			wrapPos(piecePos)
 
@@ -100,7 +105,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	const blockFitsIn = function(bitField, block){
 		for (let piece of block.shape()){
 
-			let piecePos = addPoint(block.position(), piece);
+			let piecePos = addPoints(block.position(), piece);
 
 			wrapPos(piecePos);
 
@@ -115,7 +120,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	const dropBlock = function(block){
 		//after hit test actually drop the block
 
-		let nextPos = wrapPos(addPoint(block.position(),block.momentum())); 
+		let nextPos = wrapPos(addPoints(block.position(),block.momentum())); 
 
 		block.moveTo(nextPos);
 		flags.BLOCK = true; //Blocks need redraw
@@ -125,13 +130,14 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		//Should take a block and remove it, then convert each piece to debris 
 		for (let piece of block.shape()){
-			let debrisPos = addPoint(piece, block.position());
+			let debrisPos = addPoints(piece, block.position());
 			wrapPos(debrisPos) //Maps debrisPos to Coordinate system
 			debrisField[debrisPos.x][debrisPos.y]=1;
 		}
 
 		deadBlockIndices.push(blocks.indexOf(block)); //flag block for garbage collection
 
+		flags.BLOCKHIT = block.position().y; //lets us vary playback rate of FX based on height of impact
 		flags.DEBRIS = true; //Debris needs redraw
 		flags.BLOCK = true; //need to remove dead blocks
 
@@ -162,7 +168,6 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		//TODO this should pass destroyedDebris object to view so that we can
 		//Show that transition better
-		console.log('destroying rows ', rowNumArray);
 		//Remove the debris from each of these rows,
 		for (let rowNum of rowNumArray){
 			for (let i = worldWidth-1; i >= 0; i--){
@@ -241,6 +246,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				blocksMade++;
 				blocks.push(newBlock);
 				flags.BLOCK = true; //Blocks need redraw
+				flags.BLOCKSPAWNED = true;
 		},
 
 		spawnRow : () => { //Should take arg for block type
@@ -261,21 +267,42 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		spinDebris : (direction) => { 
 			
-			let debrisFieldCopy = debrisField.slice(0);
+			//This code makes pushed blocks stick ******************
+
+			// let debrisFieldCopy = debrisField.slice(0);
 
 
-			//rotate debris copy to the proposed direction
-			spinBitField(debrisFieldCopy, direction);
+			// //rotate debris copy to the proposed direction
+			// spinBitField(debrisFieldCopy, direction);
 
-			//Check to see what blocks would be bumped by new debris field
-			for (let block of blocks){
-				if (!blockFitsIn(debrisFieldCopy, block))
-					makeDebrisFromBlock(block) //Turn the, into debris in original field
+			// //Check to see what blocks would be bumped by new debris field
+			// for (let block of blocks){
+			// 	if (!blockFitsIn(debrisFieldCopy, block))
+			// 		makeDebrisFromBlock(block) //Turn the, into debris in original field
+			// }
+
+			// spinBitField(debrisField, direction) //Now we can spin our real debris with blocks frozen to it. 
+
+			// flags.DEBRIS=true; //need redraw
+
+
+			//This code shoves falling blocks out of the way when the world rotates*****
+			let modDir = 0;
+			if (direction=='clockwise')
+				modDir = 1;
+			else
+				modDir = -1;
+
+			spinBitField(debrisField, direction)
+
+			for (let block of blocks) {
+				if (!blockFitsIn(debrisField, block)){ //If any blocks are bumped
+					block.moveTo(wrapPos(addPoints(block.position(),[modDir,0]))) //Move them in the same directions as we spin
+				}
 			}
 
-			spinBitField(debrisField, direction) //Now we can spin our real debris with blocks frozen to it. 
-
-			flags.DEBRIS=true; //need redraw
+			flags.BLOCK = true;
+			flags.DEBRIS = true;
 		},
 
 		spinBlocks : (direction) => {
@@ -284,6 +311,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				if (blockFitsIn(debrisField, proposedBlock)){
 					block.rotate(direction);
 					flags.BLOCK = true;
+					flags.BLOCKSPUN = true;
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 //View.js --- rounTris View class
 
 import Controller from './Controller';
-import {addPoint, subPoint, pointify} from './PointHelpers';
+import {addPoints, subPoints, pointify} from './PointHelpers';
 
 //Handles drawing game World, hud, as well as start and end screens... 
 
@@ -42,8 +42,8 @@ export default function View() {
 
 
 	const worldColors = { //This should be read from a file or passed TODO
-		coreFill : 'black',//Also clean up styles to produce no borders but also no coreners TODO
-		coreStroke : 'black',
+		coreFill : 'midnightblue',//Also clean up styles to produce no borders but also no coreners TODO
+		coreStroke : 'midnightblue',
 		blockFill : 'grey',
 		debrisFill : 'black',
 		debrisStroke: null,
@@ -71,7 +71,7 @@ export default function View() {
 				sides: worldState.x,
 				fillColor: worldColors.coreFill,
 				strokeColor: worldColors.coreStroke,
-				opacity: .5 //TODO temp fix to make display more obvious
+				opacity: 1
 			});
 
 			//Make outer board
@@ -116,7 +116,7 @@ export default function View() {
 
 				for (let block of worldState.blocks){
 					for (let piece of block.shape()){
-						let piecePos = addPoint(block.position(), piece);
+						let piecePos = addPoints(block.position(), piece);
 
 						piecePos = worldState.wrapPos(piecePos); //Make sure position is in coordinate system.
 

@@ -9,7 +9,7 @@ export function pointify(pointOrArray){
 }
 
 
-export function addPoint(p1,p2){
+export function addPoints(p1,p2){
 
 	p1 = pointify(p1);
 	p2 = pointify(p2);
@@ -20,7 +20,7 @@ export function addPoint(p1,p2){
 	return {x : p1.x + p2.x, y : p1.y + p2.y}
 }
 
-export function subPoint(p1,p2){
+export function subPoints(p1,p2){
 
 	p1 = pointify(p1);
 	p2 = pointify(p2);
