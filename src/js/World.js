@@ -392,16 +392,16 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		tick: (actionList, delta) => {
 			
-			for (let flag in flags){ //Reset change flags each cycle
+			for (let flag in flags){
 				flags[flag] = false;
 			}
 
 		
-			for (let action of actionList) {//execute actions passed
+			for (let action of actionList) {
 				worldActions[action.action](action.args);
 			}
 
-			//If enough time has passed drop a block
+			
 			dropTimer += delta;
 			if (dropTimer > dropRate) {
 				dropTick();
@@ -428,10 +428,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 					debris: debrisField,
 					blocks: blocks,
 					lossHeight: lossHeight,
-					//not sure about below items here
 					coreRadius: 25,
 					wrapPos: wrapPos
-
 			}		
 		},
 
@@ -453,6 +451,5 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			}
 		}
 	}
-
 }
 

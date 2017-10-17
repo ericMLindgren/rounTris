@@ -25,7 +25,7 @@ export default function ActionBuffer(keyDict) {
 	return {
 		bufferDump : () => {
 			let retBuf = buffer.slice(); //Copy internal buffer
-			buffer.splice(0,buffer.length) //Clear internal buffer
+			buffer.splice(0,buffer.length); //Clear internal buffer
 			return retBuf; //return copy
 		},
 
@@ -34,7 +34,7 @@ export default function ActionBuffer(keyDict) {
 			// console.log('checking for key: ' + input);
 			for (let key in keyDict){			
 				if (key === input) {
-					buffer.push(keyDict[key])
+					buffer.push(keyDict[key]);
 					return 1;
 				}
 			}
@@ -42,7 +42,7 @@ export default function ActionBuffer(keyDict) {
 
 		}
 
-	}
+	};
 
 }
 

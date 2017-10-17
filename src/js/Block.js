@@ -65,9 +65,6 @@ export default function Block(pos, propOb, startID){ //{position:,shape:,momentu
 				}
 			}
 		},
-
-
-	}
-
+	};
 }
 

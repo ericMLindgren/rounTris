@@ -10,11 +10,7 @@ const canvas = document.getElementById('canvas');
 
 paper.setup(canvas);
 
-paper.view.draw(); //Seems to need only one call to begin drawing...
-
-
-
-//Should split worldState and worldDimensions
+paper.view.draw();
 
 export default function View() {
 
@@ -23,6 +19,9 @@ export default function View() {
 	let spinFlag = false; //Flags to flip if world changes so we know it needs redrawing
 	let dropFlag = false;
 
+	let loadingLogo = null;
+
+
 
 	const boardLayer = new paper.Layer(),
 		  blockLayer = new paper.Layer(),
@@ -30,11 +29,11 @@ export default function View() {
 		  menuLayer = new paper.Layer();
 
 
-	//GameBoard Objects
+	//GameBoard Objects TODO Deprecate these in favor of layers for all tasks
 	let worldCore = null; 
 	const allRings = []; //list of each paper.Path.RegularPolygon that form the worlds rings
 
-	//Game Block objects
+	//Game Block objects TODO Deprecate these in favor of layers for all tasks
 	const blockReps = []; //Lists to collect our paper items for easy removal later
 	const debrisReps = [];
 
@@ -42,14 +41,14 @@ export default function View() {
 
 
 	const worldColors = { //This should be read from a file or passed TODO
-		coreFill : 'white',//Also clean up styles to produce no borders but also no coreners TODO
-		coreStroke : 'black',
-		blockFill : 'grey',
-		debrisFill : 'black',
+		coreFill: 'white',//Also clean up styles to produce no borders but also no coreners TODO
+		coreStroke: 'black',
+		blockFill: 'grey',
+		debrisFill: 'black',
 		debrisStroke: null,
 		debrisStrokeWidth: .5,
-		lossFill : 'red',
-		lossStrokeWidth : .5
+		lossFill: 'red',
+		lossStrokeWidth: .5
 	}
 
 	const drawBoard = (worldState) => {
@@ -85,7 +84,6 @@ export default function View() {
 					radius: worldState.coreRadius,
 					center: paper.view.center,
 					sides: worldState.x,
-					// strokeColor: 'black' //remove after debugging
 				});
 				
 
@@ -106,7 +104,7 @@ export default function View() {
 
 				//Set drawing style for block
 				const blockStyle = { //TODO this could be handled better maybe even using functions for values to allow for animation, would mean rethinking redraw rate.
-						fillColor : worldColors.blockFill
+						fillColor: worldColors.blockFill
 					}
 
 
@@ -131,9 +129,9 @@ export default function View() {
 				debrisLayer.activate();
 
 				const debrisStyle = {
-					fillColor : worldColors.debrisFill,
-					strokeColor : worldColors.debrisStroke,
-					strokeWidth : worldColors.debrisStrokeWidth
+					fillColor: worldColors.debrisFill,
+					strokeColor: worldColors.debrisStroke,
+					strokeWidth: worldColors.debrisStrokeWidth
 				}
 
 				while (debrisReps.length > 0) //Remove all block drawings
@@ -209,16 +207,13 @@ export default function View() {
 	}
 
 	const clearLayer = (layerToClear) => {
-		// console.log('before clearLayer: ', layerToClear.children)
 		for (let i = layerToClear.children.length-1; i>-1; i--){
 				layerToClear.children[i].remove();
 			}
-		// console.log('after clearLayer: ', layerToClear.children)
 	}
 
 	const startScreen = () => {
 		clearAllLayers();
-		// textButton('BEGIN', paper.view.center, controller.startGame)
 		textButton({
 				content: 'BEGIN', 
 				position: paper.view.center,
@@ -226,8 +221,34 @@ export default function View() {
 				callback: controller.startGame});
 	}
 
+	const loadScreen = () => {
 
-	
+		textButton({
+				content: '...LOADING SOUNDS...', 
+				position: paper.view.center,
+				size: 25,
+				callback: null});
+
+		textButton({
+				content: 'HEADPHONES RECOMMENDED', 
+				position: addPoints(paper.view.center, [0, 20]),
+				size: 10,
+				callback: null});
+
+		loadingLogo = new  paper.Path.RegularPolygon({
+					radius: 10,
+					center: addPoints(paper.view.center, [0,50]),
+					sides: 4,
+					strokeColor: 'black',
+					strokeWidth: 3,
+					fillColor: 'ghostwhite'
+				});
+
+	}
+
+
+	loadScreen();
+
 	return {
 		tick: (worldState) => {
 			updateBoard(worldState);
@@ -263,7 +284,6 @@ export default function View() {
 
 		lossScreen: function(){
 			setGameOpacity(.5);
-			// textButton('YOU LOSE! PLAY AGAIN?', paper.view.center, startScreen)
 			textButton({
 				content: 'YOU LOSE!', 
 				position: paper.view.center,
@@ -281,15 +301,13 @@ export default function View() {
 		setController: (newController) => {
 			controller = newController;
 			paper.view.onKeyDown = controller.keyDown;
-			paper.view.onFrame = controller.tick;
+			paper.view.onFrame = (event) => {
+				if (loadingLogo)
+					loadingLogo.rotate(1);
+				controller.tick(event);
+			}
 		},
 	}
 }
-
-// const test = new View();
-// test.startScreen();
-
-console.log('View Class Loaded');
-
 
 

@@ -16,8 +16,7 @@ const keyLayout = { //Learn how to pass arguments in this scheme TODO
 	's' : {action: 'spawnBlock', args:null},
 	'y' : {action: 'debug', args:null},
 	'r' : {action: 'spawnRow', args:null},
-
-}
+};
 
 const soundSources = {
     "destroy": "./sounds/30937__aust-paul__whatever.wav",
@@ -28,11 +27,10 @@ const soundSources = {
     "space_music": "./sounds/33796__yewbic__ambience03.wav",
     "game_over": "./sounds/173859__jivatma07__j1game-over-mono.wav",
     "debrisSpun": "./sounds/15545__lagthenoggin__reload_shortened.wav"
-}
+};
 
 const controller = new Controller([20,15,9]);
 const view = new View();
-
 
 const actionBuffer = new ActionBuffer(keyLayout);
 const soundManager = new SoundManager(soundSources, view.startScreen);
@@ -43,7 +41,4 @@ controller.setSoundManager(soundManager);
 
 view.setController(controller);
 
-// view.startScreen();
-
-
-console.log('ran ok!');
+// console.log('ran ok!');

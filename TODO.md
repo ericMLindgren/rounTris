@@ -1,30 +1,29 @@
-rountris TODOS
+General:
 
-Load Screen
+- Present load screen while sounds buffer
+
+- Score/levels HUD
 
 
-//GRAPHICAL
-pulsing loss height would be nice, maybe pulsing world.
+Graphical Stuff:
 
-glowing blocks with opacity animation with easing
+- Pulsing loss height
 
-different block colors and different debris colors
-	this involves entirely refactoring debris so that block shape remains...
+- Glowing blocks with opacity animation with easing
 
-Score/levels
+- Different block colors and different debris colors
+this involves entirely refactoring debris so that block shape remains intact
+
+
+Fixes: 
 
 Need to abstract SoundManager better. Too intermingled with Control class
 
 
+Features: 
 
+- Behavior Class - possibly instantiated with bpm for syncing 
 
-Behavior Class - possibly instantiated with bpm for syncing 
+- Full Block Behaviors — not sure how to implement, can subclass block but would be nicer to create behaviors that a block can implement, like make blocks via new Block(position, shape, style, [behaviors])
 
-Page Manager - Should we abstract this to deal with loss screen, high scores, 
-
-Full Block Behaviors — not sure how to implement, can subclass block but would be nicer to create behaviors that a block can implement, like make blocks via new  
-Block(position, shape, style, [behaviors])
-
-Level Modes  — Should be a level manager class? deals with block types, order, randomness, score/progress, difficulty
-
-Animations — via state object from World passing some history to view
+- Level Modes  Implement LevelManager class to deal with block types, order, randomness, score/progress, difficulty

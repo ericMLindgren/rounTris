@@ -10,12 +10,11 @@ export default function Controller(argOb) { //Controller is initialized with dim
 	let actionBuffer = null;
 	let soundManager = null;
 
-
 	let pauseMusic = null;
 	let endMusic = null;
 	let playMusic = null;
 
-	let gameState = 'stopped'
+	let gameState = 'stopped';
 	let PAUSED = false;
 
 
@@ -24,14 +23,14 @@ export default function Controller(argOb) { //Controller is initialized with dim
 		PAUSED = !PAUSED;
 
 		if (PAUSED){
-			playMusic.stop()
-			pauseMusic = soundManager.playSound('space_music', 2, true)
+			playMusic.stop();
+			pauseMusic = soundManager.playSound('space_music', 2, true);
 			
 			view.pauseScreen();
 		}
 		else{
 			pauseMusic.stop();
-			playMusic = soundManager.playSound('play_music', 1, true)
+			playMusic = soundManager.playSound('play_music', 1, true);
 
 			view.unPauseScreen();
 		}
@@ -76,14 +75,10 @@ export default function Controller(argOb) { //Controller is initialized with dim
 		},
 
 		keyDown: (event) => {
-			if (event.key == 'space') //Super hacky, rework TODO
+			if (event.key == 'space')
 				togglePause();
 			 else
 				actionBuffer.keyIn(event.key);
-			//Does this filter between game actions and state actions, like pause? QUESTION TODO
-
-		//Takes key input, and sends to ActionBuffer
-
 		},
 
 		tick: (event) => {
@@ -93,27 +88,21 @@ export default function Controller(argOb) { //Controller is initialized with dim
 
 
 				//SoundManager stuff, should abstract
-
-				
 				if (worldState.flags.BLOCKSPUN)
 					soundManager.playSound('blockSpun'); //increase pitch the higher the block lands				
 				// if (worldState.flags.DEBRISSPUN){ //spin noise is too abrassive
 				// 	soundManager.playSound('debrisSpun'); //increase pitch the higher the block lands				
 				// }
 				if (worldState.flags.BLOCKHIT)
-					soundManager.playSound('blockLanded', 1+worldState.flags.BLOCKHIT/10) //increase pitch the higher the block lands
+					soundManager.playSound('blockLanded', 1+worldState.flags.BLOCKHIT/10); //increase pitch the higher the block lands
 				if (worldState.flags.ROWSDESTROYED)
-					soundManager.playSound('destroy')
+					soundManager.playSound('destroy');
 				if (worldState.flags.BLOCKSPAWNED)
-					soundManager.playSound('woosh', 2)
+					soundManager.playSound('woosh', 2);
 				if (worldState.flags.LOSS)
 					loseGame();
 			
 			}
-			// console.log('frame');
-			//Takes a tick (probably from view) with event object where event.delta = time since last tick
-			//needs to update world, world should return state, then tick should call View.tick(worldOb) to draw the state
-
 		}
-	}
+	};
 }

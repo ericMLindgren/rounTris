@@ -35,7 +35,7 @@ export default function SoundManager(soundSources, callBack) {
 				soundBuffers[bufferKey] = buffer;
 				logLoad();
 			});
-		}
+		};
 
 		request.send();
 	}
@@ -62,5 +62,5 @@ export default function SoundManager(soundSources, callBack) {
 
 			return source;
 		}                                
-	}
+	};
 }
