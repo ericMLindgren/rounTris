@@ -56,7 +56,6 @@ export default function SoundManager(soundSources, callBack) {
 			
 			if (loop == true) {
 			  	source.loop = true;
-			  	console.log('looping ', bufferKey);
 			}
 			source.start(0);
 

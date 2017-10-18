@@ -246,16 +246,19 @@ export default function View() {
 
 	}
 
+	const passiveAnimations = (event, worldState) => {
+		if (allRings[worldState.lossHeight])
+					allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1
+
+	}
+
 
 	loadScreen();
 
 	return {
 		tick: (worldState, event) => {
 			updateBoard(worldState);
-
-			//TODO abstract to animate()
-			if (allRings[worldState.lossHeight])
-					allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1
+			passiveAnimations(event, worldState);
 		},
 
 		clearScreen: () => {

@@ -16,8 +16,16 @@ const BlockTypes = [
 
 
 export default function World (worldWidth, worldHeight, lossHeight){
-	//private variables / methods: one of these: preGame, playing, paused, gameWon, gameLost
-	let blocksMade = 1; //Used to generate ID #
+
+	let blocksMade = 1; //Used to generate ID # for block tracking, useful for debug
+
+
+	//TODO Abstract this stuff
+	let score = 0;
+	let scoreForBlockSpawn = 75;
+	let scoreForRowComplete = 1000;	
+	let scoreMultiplier = 1;
+
 
 	const flags = {
 		ROWSDESTROYED: false,
@@ -28,10 +36,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		DEBRIS : false,
 		BLOCK : false,
 		LOSS : false
-
 	}
 
-	let rowsDestroyed = 0;
+	const ALERTS = [];
+
 
 	let inMeteorShower = false;
 	let meteorCap = 10;
@@ -71,21 +79,16 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			if (rowsToDestroy.length > 0){
 				destroyRows(rowsToDestroy);
 				flags.DEBRIS = true;
-				// flags.ROWSDESTROYED = true
 			}
 
-		// if (blocks.length > 0)
-			// console.log('dropTick, blocks: ', blocks);
 		for (let block of blocks){ //infinite falling
 
-			
 			if (canDrop(block))
 				dropBlock(block);
 			else makeDebrisFromBlock(block);
 			
 		}
-		if (deadBlockIndices.length>0)
-			console.log('deadBlockIndices:', deadBlockIndices);
+		
 		clearDeadBlocks();
 		dropTimer = 0;//reset the drop timer
 	}
@@ -186,8 +189,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		for (let rowNum of rowNumArray){
 			for (let i = worldWidth-1; i >= 0; i--){
 				debrisField[i].splice(rowNum,1);
-				rowsDestroyed++;
 			} 
+			scorePoints(scoreForRowComplete);
+			scoreMultiplier++;
 		}
 
 		//Add empty space on the cieling of the bit array to get back to normal.
@@ -197,6 +201,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			}
 		}
 	};
+
 
 	const wrapPos = (pos) => { 
 			//TODO Take away side effects
@@ -215,6 +220,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			return pos;
 		};
 
+
 	const spinBitField = function(bitField, direction){
 		switch (direction){
 				case 'clockwise':
@@ -226,6 +232,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			}	
 	}
 
+
 	const checkLoss = () => {
 		for (let y = worldHeight; y >= lossHeight; y--){
 			for (let x in debrisField){
@@ -236,17 +243,13 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		return false;
 	}
 
-	const startMeteorShower = () => {
-		spawnRate = meteorRate;
-		inMeteorShower = true;
-	}
 
-	const endMeteorShower = () => {
-		spawnRate = startSpawnRate;
-		meteorCount = 0;
-		inMeteorShower = false;
-		rowsDestroyed++
-
+	const scorePoints = (amount) => {
+		console.log('Score:', score)
+		if (scoreMultiplier>1){
+			ALERTS.push({message:'BONUS!!!', type:'reward'})
+		}
+		score += amount*scoreMultiplier;
 	}
 
 	//Semi-private Functions:
@@ -280,43 +283,25 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			}
 		},
 
-		spawnTick : () => { //Should take arg for block type
-				console.log('METERO SHOWER? ', inMeteorShower);
-				//Start a meteor shower?
-				// if (rowsDestroyed%6==0)	//Meteor showers currently disabled
-				// 	startMeteorShower();
+		spawnTick : () => {
+			
+			const randomBlockType = BlockTypes[getRandomInt(1,BlockTypes.length)];
+			const randomX = getRandomInt(0,worldWidth);
 
-				//Make meteor if we're mid meteor shower 
-				if (inMeteorShower) { //Abstract to level manager class TODO 
-					const randomX = getRandomInt(0,worldWidth);
-					let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-					let newBlock = new Block(startPos, BlockTypes[0], blocksMade);
-					blocksMade++;
-					blocks.push(newBlock);
-					flags.BLOCK = true; //Blocks need redraw
-					flags.BLOCKSPAWNED = true;
-					spawnTimer = 0;
+			let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
+			let newBlock = new Block(startPos, randomBlockType, blocksMade);
+			for (let i = 0; i < getRandomInt(0,4); i++) 
+				newBlock.rotate()
+			blocksMade++;
+			blocks.push(newBlock);
 
-					meteorCount++;
-					if (meteorCount == meteorCap)
-						endMeteorShower();
 
-				}
-				//If we're not in a meteor shower
-				else {
-					const randomBlockType = BlockTypes[getRandomInt(1,BlockTypes.length)];
-					const randomX = getRandomInt(0,worldWidth);
-
-					let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
-
-					let newBlock = new Block(startPos, randomBlockType, blocksMade);
-					blocksMade++;
-					blocks.push(newBlock);
-					flags.BLOCK = true; //Blocks need redraw
-					flags.BLOCKSPAWNED = true;
-					spawnTimer = 0;
-				}
+			flags.BLOCK = true; //Blocks need redraw
+			flags.BLOCKSPAWNED = true;
+			spawnTimer = 0;
+			scorePoints(scoreForBlockSpawn);
+			
 		},
 
 		spawnRow : () => { //for debugging only
@@ -336,27 +321,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		
 
 		spinDebris : (direction) => { 
-			
-			//This code makes pushed blocks stick ******************
 
-			// let debrisFieldCopy = debrisField.slice(0);
-
-
-			// //rotate debris copy to the proposed direction
-			// spinBitField(debrisFieldCopy, direction);
-
-			// //Check to see what blocks would be bumped by new debris field
-			// for (let block of blocks){
-			// 	if (!blockFitsIn(debrisFieldCopy, block))
-			// 		makeDebrisFromBlock(block) //Turn the, into debris in original field
-			// }
-
-			// spinBitField(debrisField, direction) //Now we can spin our real debris with blocks frozen to it. 
-
-			// flags.DEBRIS=true; //need redraw
-
-
-			//This code shoves falling blocks out of the way when the world rotates*****
 			let modDir = 0;
 			if (direction=='clockwise')
 				modDir = 1;
@@ -372,7 +337,6 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				}
 			}
 
-			
 			flags.DEBRIS = true;
 			flags.DEBRISSPUN = true;
 		},
@@ -396,6 +360,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		tick: (actionList, delta) => {
 			
+			scoreMultiplier = 1;
+
 			for (let flag in flags){
 				flags[flag] = false;
 			}
@@ -422,7 +388,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			if (checkLoss())
 				flags.LOSS = true;
 
-			if (!hasTicked) //draw debris on the very first tick
+			if (!hasTicked) //draw debris on the very first tick to catch start state
 				flags.DEBRIS = true;
 
 			return {	//return world object to be passed to view for drawing
@@ -433,7 +399,9 @@ export default function World (worldWidth, worldHeight, lossHeight){
 					blocks: blocks,
 					lossHeight: lossHeight,
 					coreRadius: 25,
-					wrapPos: wrapPos
+					wrapPos: wrapPos,
+					score: score,
+					alerts: ALERTS
 			}		
 		},
 

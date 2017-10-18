@@ -19,20 +19,27 @@ export default function Controller(argOb) { //Controller is initialized with dim
 
 
 	const togglePause = () => {
-		console.log('PAUSE/UNPAUSE');
-		PAUSED = !PAUSED;
+		if (gameState!='stopped' && gameState!='loss'){		
+			//Switch state		
+			if (gameState=='paused')
+				gameState='running';
+			else
+				gameState='paused'
 
-		if (PAUSED){
-			playMusic.stop();
-			pauseMusic = soundManager.playSound('space_music', 2, true);
-			
-			view.pauseScreen();
-		}
-		else{
-			pauseMusic.stop();
-			playMusic = soundManager.playSound('play_music', 1, true);
 
-			view.unPauseScreen();
+			//Act on new state
+			if (gameState=='paused'){
+				playMusic.stop();
+				pauseMusic = soundManager.playSound('space_music', 2, true);
+				
+				view.pauseScreen();
+			}
+			else{
+				pauseMusic.stop();
+				playMusic = soundManager.playSound('play_music', 1, true);
+
+				view.unPauseScreen();
+			}
 		}
 	};
 
@@ -82,7 +89,7 @@ export default function Controller(argOb) { //Controller is initialized with dim
 		},
 
 		tick: (event) => {
-			if (gameState == 'running' && (!PAUSED)){
+			if (gameState == 'running'){
 				const worldState = world.tick(actionBuffer.bufferDump(), event.delta);
 				view.tick(worldState, event);
 
@@ -101,7 +108,10 @@ export default function Controller(argOb) { //Controller is initialized with dim
 					soundManager.playSound('woosh', 2);
 				if (worldState.flags.LOSS)
 					loseGame();
-			
+			} else if (gameState=='paused') {
+				event.delta = 0; //Time doesn't pass in the world
+				const worldState = world.tick([], event.delta);
+				view.tick(worldState, event); //But we still get to tick animations
 			}
 		}
 	};

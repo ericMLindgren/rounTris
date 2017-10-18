@@ -1,7 +1,7 @@
 //Block.js
 //Block class that will be used in rounTris.js Game
 
-import {addPoint, subPoint, pointify} from './PointHelpers';
+import {addPoint, subPoint, pointify, getRandomInt} from './PointHelpers';
 
 
 export default function Block(pos, propOb, startID){ //{position:,shape:,momentum:}
@@ -11,6 +11,28 @@ export default function Block(pos, propOb, startID){ //{position:,shape:,momentu
 	const momentum = propOb.momentum;
 	const id = startID;
 
+	const rotate = (direction) => {
+		for (let piece of blockShape){
+			if (direction == 'clockwise'){
+				//Rotate coordinates
+				let newX = piece[1];
+				let newY = -piece[0];
+				//Set old shape to rotated
+				piece[0] = newX;
+				piece[1] = newY;
+			}
+			else {
+				let newX = -piece[1];
+				let newY = piece[0];
+				piece[0] = newX;
+				piece[1] = newY;
+			}
+		}
+	};
+
+
+	for (let i = 0; i < getRandomInt(0,5); i++) 
+		rotate() //randomize starting shape
 
 	//TODO put appearance details in here so that view can draw unique shapes
 
@@ -47,24 +69,9 @@ export default function Block(pos, propOb, startID){ //{position:,shape:,momentu
 			return new Block(position, {shape: newShape}); 
 		},
 
-		rotate : (direction) => {
-			for (let piece of blockShape){
-				if (direction == 'clockwise'){
-					//Rotate coordinates
-					let newX = piece[1];
-					let newY = -piece[0];
-					//Set old shape to rotated
-					piece[0] = newX;
-					piece[1] = newY;
-				}
-				else {
-					let newX = -piece[1];
-					let newY = piece[0];
-					piece[0] = newX;
-					piece[1] = newY;
-				}
-			}
-		},
+		rotate: rotate,
+
+		
 	};
 }
 
