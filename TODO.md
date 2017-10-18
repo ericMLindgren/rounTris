@@ -1,6 +1,6 @@
-GRAPHICAL
+**** - Priorities
 
--Pulsing loss height
+GRAPHICAL
 
 -Glowing blocks with opacity animation with easing
 
@@ -16,7 +16,9 @@ GRAPHICAL
 
 Fixes:
 
--Randomly rotate block on spawn
+-Create Mirrors for L and Z blocks ****
+
+-Randomly rotate block on spawn ****
 
 -Anti repetition spawn order
 
@@ -28,6 +30,8 @@ Fixes:
 
 
 Features:
+
+-Gravity (or Anti) - Slower movement farther out, possible solution to extra small playfield.
 
 -Behavior Class - possibly instantiated with bpm for syncing 
 

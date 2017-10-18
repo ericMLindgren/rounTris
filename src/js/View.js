@@ -250,8 +250,12 @@ export default function View() {
 	loadScreen();
 
 	return {
-		tick: (worldState) => {
+		tick: (worldState, event) => {
 			updateBoard(worldState);
+
+			//TODO abstract to animate()
+			if (allRings[worldState.lossHeight])
+					allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1
 		},
 
 		clearScreen: () => {
@@ -302,8 +306,11 @@ export default function View() {
 			controller = newController;
 			paper.view.onKeyDown = controller.keyDown;
 			paper.view.onFrame = (event) => {
+
+
 				if (loadingLogo)
 					loadingLogo.rotate(1);
+
 				controller.tick(event);
 			}
 		},

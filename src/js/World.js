@@ -71,15 +71,18 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			if (rowsToDestroy.length > 0){
 				destroyRows(rowsToDestroy);
 				flags.DEBRIS = true;
-				flags.ROWSDESTROYED = true
+				// flags.ROWSDESTROYED = true
 			}
 
 		// if (blocks.length > 0)
 			// console.log('dropTick, blocks: ', blocks);
 		for (let block of blocks){ //infinite falling
+
+			
 			if (canDrop(block))
 				dropBlock(block);
 			else makeDebrisFromBlock(block);
+			
 		}
 		if (deadBlockIndices.length>0)
 			console.log('deadBlockIndices:', deadBlockIndices);
@@ -175,6 +178,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 
 	const destroyRows = (rowNumArray) => {
+		flags.ROWSDESTROYED = true
 
 		//TODO this should pass destroyedDebris object to view so that we can
 		//Show that transition better

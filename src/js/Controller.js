@@ -84,7 +84,7 @@ export default function Controller(argOb) { //Controller is initialized with dim
 		tick: (event) => {
 			if (gameState == 'running' && (!PAUSED)){
 				const worldState = world.tick(actionBuffer.bufferDump(), event.delta);
-				view.tick(worldState);
+				view.tick(worldState, event);
 
 
 				//SoundManager stuff, should abstract
