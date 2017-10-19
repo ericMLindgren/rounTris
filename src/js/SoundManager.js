@@ -3,7 +3,7 @@
 //Will manage all of the music and FX for our game
 //needs to maintain seperate buffers for looping music and 
 //one-off sound effects
-
+const MUTE = true
 
 export default function SoundManager(soundSources, callBack) {
 	//These allow a callback once sounds are loaded:
@@ -48,6 +48,7 @@ export default function SoundManager(soundSources, callBack) {
 	return {
 
 		playSound : (bufferKey, rate, loop) => {//TODO rewrite with gain nodes and pitch nodes
+
 			if (!rate) rate = 1;
 			var source = context.createBufferSource(); // creates a sound source
 			source.buffer = soundBuffers[bufferKey];   // tell the source which sound to play
@@ -57,7 +58,9 @@ export default function SoundManager(soundSources, callBack) {
 			if (loop == true) {
 			  	source.loop = true;
 			}
-			source.start(0);
+
+			if (!MUTE)
+				source.start(0);
 
 			return source;
 		}                                

@@ -109,9 +109,7 @@ export default function Controller(argOb) { //Controller is initialized with dim
 				if (worldState.flags.LOSS)
 					loseGame();
 			} else if (gameState=='paused') {
-				event.delta = 0; //Time doesn't pass in the world
-				const worldState = world.tick([], event.delta);
-				view.tick(worldState, event); //But we still get to tick animations
+				view.tick(event); //But we still get to tick animations
 			}
 		}
 	};

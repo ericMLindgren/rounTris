@@ -21,6 +21,8 @@ export default function View() {
 
 	let loadingLogo = null;
 
+	const passiveAnimationList = {};
+
 
 
 	const boardLayer = new paper.Layer(),
@@ -94,6 +96,9 @@ export default function View() {
 
 			allRings[worldState.lossHeight].strokeColor = worldColors.lossFill;
 			allRings[worldState.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
+
+			//Create a passive animation for pulsating barrier
+			passiveAnimationList["lossHeightPulse"] = (event) => {allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1}
 
 		};
 
@@ -175,6 +180,7 @@ export default function View() {
         const newBlockRep = new paper.Path.Line(allRings[drawPos.y].segments[drawPos.x].point, allRings[drawPos.y].segments[nextPos].point);     
         newBlockRep.lineTo(allRings[drawPos.y+1].segments[nextPos].point);
         newBlockRep.lineTo(allRings[drawPos.y+1].segments[drawPos.x].point);
+
         newBlockRep.closePath();
 
         //Apply styles
@@ -202,55 +208,64 @@ export default function View() {
 
 	}
 
+	//makes individual pieces
+	const smallSquare = (position) => {
+		console.log('drawing small square at', position)
+		return paper.Path.Rectangle({
+	        point: position,
+	        size: [20,20],
+	        fillColor: 'black',
+	        strokeColor: 'white'
+	    });
+	}
+
 	const drawBlockPreview = (block) => {
+
+		//Need to translate block shape to below grid;
 
 		//Defines block shape
 		let grid = [0,0,0,
-					0,0,0,
+					1,1,1,
 					0,0,0];
 
-		//makes individual pieces
-		const makeSinglePiece = (position) => {
-    		return new paper.Path.Rectangle({
-		        point: position,
-		        size: [20,20],
-		        fillColor: 'black',
-		        strokeColor: 'white'
-		    });
-    	}
 
-		var drawPos = paper.view.center;
-		var blockRep = new paper.Group();
+		let drawPos = new paper.Point(300,100);
+		const blockRep = new paper.Group();
 
-		for (var i in grid){
+		for (let i in grid){
 		    if (grid[i]) {
 		        blockRep.addChild(smallSquare(drawPos))
 		    }
 		    
 		    if ((parseInt(i)+1)%3==0){
-		        drawPos += [-40,20]   
+		        drawPos = addPoints(drawPos, [-40,20])
 		        
 		    } else {
-		        drawPos += [20,0]
+		        drawPos = addPoints(drawPos, [20,0])
 		    }
 		}
 
 		//Creates a drop shadow and adds to blockRep group
-		var shadow = blockRep.clone();
+		const shadow = blockRep.clone();
 		shadow.opacity = .2;
-		shadow.position += [-5, 5];
+		shadow.position = addPoints(shadow.position, [-5, 5]);
 		blockRep.addChild(shadow);
 
 		//Draws preview bubble
-		var bubble = new paper.Path.Circle({
-		    center: blockRep.position - [0,5],
+		const bubble = new paper.Path.Circle({
+		    center: blockRep.position,
 		    radius: 50,
 		    fillColor: 'white',
 		    strokeColor: 'black',
 		    strokeWidth: 2
 		});
 
-		return new paper.Group(bubble, blockRep);
+		bubble.sendToBack();
+
+		const previewGroup = new paper.Group(bubble, blockRep);
+		previewGroup.scale(.5,.5);
+
+		return previewGroup;
 
 
 	}
@@ -308,10 +323,11 @@ export default function View() {
 
 	}
 
-	const passiveAnimations = (event, worldState) => {
-		if (allRings[worldState.lossHeight])
-					allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1
-				//This should not need continous worldState TODO
+	const passiveAnimations = (event) => {
+		for (let key in passiveAnimationList){
+			console.log('Running animation:', key)
+			passiveAnimationList[key](event)
+		}
 	}
 
 
@@ -319,8 +335,9 @@ export default function View() {
 
 	return {
 		tick: (worldState, event) => {
-			updateBoard(worldState);
-			passiveAnimations(event, worldState);
+			if (worldState)
+				updateBoard(worldState);
+			passiveAnimations(event);
 		},
 
 		clearScreen: () => {
