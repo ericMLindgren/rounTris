@@ -9,7 +9,6 @@ const shapeCopy = (baseShape) => {
 	for (let piece of baseShape){
 		newShape.push([piece[0], piece[1]]);
 	}
-	console.log()
 	return newShape;
 }
 
@@ -21,35 +20,7 @@ export default function Block(pos, shape, idNum){ //{position:,shape:,momentum:}
 	const momentum = [0,-1];
 	const id = idNum;
 	const blockShape = shapeCopy(shape);
-	console.log('inited with shape:', blockShape);
 
-	const rotate = (direction) => {
-		for (let piece of blockShape){
-			if (direction == 'clockwise'){
-
-				//Rotate coordinates
-				let newX = piece[1];
-				let newY = -piece[0];
-				
-				//Set old shape to rotated
-				piece[0] = newX;
-				piece[1] = newY;
-			}
-			else {
-				let newX = -piece[1];
-				let newY = piece[0];
-				piece[0] = newX;
-				piece[1] = newY;
-			}
-		}
-	};
-
-
-	// for (let i = 0; i < getRandomInt(0,5); i++)
-	// {
-	// 	console.log('randomizing block')
-	// 	rotate() //randomize starting shape
-	// }
 
 	//TODO put appearance details in here so that view can draw unique shapes
 
@@ -86,9 +57,32 @@ export default function Block(pos, shape, idNum){ //{position:,shape:,momentum:}
 			return new Block(position, {shape: newShape}); 
 		},
 
-		rotate: rotate,
+		rotate:  (direction) => {
+			for (let piece of blockShape){
+				if (direction == 'clockwise'){
 
-		
+					//Rotate coordinates
+					let newX = piece[1];
+					let newY = -piece[0];
+					
+					//Set old shape to rotated
+					piece[0] = newX;
+					piece[1] = newY;
+				}
+				else {
+					let newX = -piece[1];
+					let newY = piece[0];
+					piece[0] = newX;
+					piece[1] = newY;
+				}
+			}
+		},
+
+		flip: () => {
+			for (let piece of blockShape){
+				piece[0] = -piece[0];
+			}
+		}
 	};
 }
 

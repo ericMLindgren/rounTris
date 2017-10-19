@@ -7,10 +7,10 @@ import {addPoints, subPoints, pointify, getRandomInt} from './PointHelpers';
 
 const BlockShapes = [
 	[[0,-2],[0,-1],[0,0],[0,1]], // I
-	// [[-1,0],[0,0],[0,1],[0,2]], //  L 
-	// [[-1,0],[0,0],[1,0],[0,1]], //  T
-	// [[-1,0],[0,0],[0,1],[1,1]], //  Z      
-	// [[-1,0],[0,0],[-1,1],[0,1]] // O      
+	[[-1,0],[0,0],[0,1],[0,2]], //  L 
+	[[-1,0],[0,0],[1,0],[0,1]], //  T
+	[[-1,0],[0,0],[0,1],[1,1]], //  Z      
+	[[-1,0],[0,0],[-1,1],[0,1]] // O      
 ]
 
 
@@ -251,6 +251,27 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		score += amount*scoreMultiplier;
 	}
 
+	const makeRandomBlock = () => {
+
+		const randomBlockShape = BlockShapes[getRandomInt(0,BlockShapes.length)];
+
+		const randomX = getRandomInt(0,worldWidth);
+		let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
+		let newBlock = new Block(startPos, randomBlockShape, blocksMade);
+
+		blocksMade++;
+		blocks.push(newBlock);
+
+		for (let i = 0; i < getRandomInt(0,4); i++){
+			newBlock.rotate() //randomize starting shape rotations
+			newBlock.flip();
+		}
+
+		//TODO Flip bocks 
+			
+
+	}
+
 	//Semi-private Functions:
 	const worldActions = {
 
@@ -260,7 +281,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		},
 
 
-		rushDrop :() => {
+		rushDrop: () => {
 			if (blocks.length>0){
 				let lowestBlock = null;
 
@@ -284,16 +305,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		spawnTick : () => {
 			
-			const randomBlockShape = BlockShapes[getRandomInt(0,BlockShapes.length)];
-			const randomX = getRandomInt(0,worldWidth);
-
-
-			let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
-			let newBlock = new Block(startPos, randomBlockShape, blocksMade);
-
-			blocksMade++;
-			blocks.push(newBlock);
-
+			
+			makeRandomBlock();
 
 			flags.BLOCK = true; //Blocks need redraw
 			flags.BLOCKSPAWNED = true;
