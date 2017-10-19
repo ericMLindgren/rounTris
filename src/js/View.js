@@ -25,6 +25,7 @@ export default function View() {
 
 	const boardLayer = new paper.Layer(),
 		  blockLayer = new paper.Layer(),
+		  blockPreviewLayer = new paper.Layer(),
 		  debrisLayer = new paper.Layer(),
 		  menuLayer = new paper.Layer();
 
@@ -96,7 +97,7 @@ export default function View() {
 
 		};
 
-	const updateBoard = function(worldState) {
+	const updateBoard = (worldState) => {
 		if (worldState){ //If there's a stat object, ie change in the world
 			if (worldState.flags.BLOCK) {
 
@@ -121,6 +122,17 @@ export default function View() {
 						const newBlockRep = drawAtPos(piecePos, blockStyle, worldState);
 				        blockReps.push(newBlockRep); //add to list to remove later
 				    }
+				}
+
+				//Draw block previews
+
+				while (blockPreviewLayer.children.length>0)
+					blockPreviewLayer.children.pop().remove();
+
+				// blockPreviewLayer.activate()
+				for (let block of worldState.blocks){
+					//If block is out of frame:
+						drawBlockPreview(block);
 				}
 			}
 
@@ -151,7 +163,7 @@ export default function View() {
 		}
 	}
 
-	const drawAtPos = function(drawPos, styleOb, worldState){
+	const drawAtPos = (drawPos, styleOb, worldState) => {
 
 		// console.log('drawAtPos');
 		
@@ -173,8 +185,7 @@ export default function View() {
         return newBlockRep;
 	}
 
-	const textButton = (propOb) =>
-	{
+	const textButton = (propOb) => {
 		menuLayer.activate();
 
 		const text = new paper.PointText({ 
@@ -191,7 +202,58 @@ export default function View() {
 
 	}
 
+	const drawBlockPreview = (block) => {
 
+		//Defines block shape
+		let grid = [0,0,0,
+					0,0,0,
+					0,0,0];
+
+		//makes individual pieces
+		const makeSinglePiece = (position) => {
+    		return new paper.Path.Rectangle({
+		        point: position,
+		        size: [20,20],
+		        fillColor: 'black',
+		        strokeColor: 'white'
+		    });
+    	}
+
+		var drawPos = paper.view.center;
+		var blockRep = new paper.Group();
+
+		for (var i in grid){
+		    if (grid[i]) {
+		        blockRep.addChild(smallSquare(drawPos))
+		    }
+		    
+		    if ((parseInt(i)+1)%3==0){
+		        drawPos += [-40,20]   
+		        
+		    } else {
+		        drawPos += [20,0]
+		    }
+		}
+
+		//Creates a drop shadow and adds to blockRep group
+		var shadow = blockRep.clone();
+		shadow.opacity = .2;
+		shadow.position += [-5, 5];
+		blockRep.addChild(shadow);
+
+		//Draws preview bubble
+		var bubble = new paper.Path.Circle({
+		    center: blockRep.position - [0,5],
+		    radius: 50,
+		    fillColor: 'white',
+		    strokeColor: 'black',
+		    strokeWidth: 2
+		});
+
+		return new paper.Group(bubble, blockRep);
+
+
+	}
 
 	const setGameOpacity = (newOpacity) => {
 		blockLayer.opacity = newOpacity;
@@ -249,7 +311,7 @@ export default function View() {
 	const passiveAnimations = (event, worldState) => {
 		if (allRings[worldState.lossHeight])
 					allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1
-
+				//This should not need continous worldState TODO
 	}
 
 

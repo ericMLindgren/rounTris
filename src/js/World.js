@@ -16,9 +16,6 @@ const BlockShapes = [
 
 export default function World (worldWidth, worldHeight, lossHeight){
 
-	let blocksMade = 1; //Used to generate ID # for block tracking, useful for debug
-
-
 	//TODO Abstract this stuff
 	let score = 0;
 	let scoreForBlockSpawn = 75;
@@ -257,14 +254,13 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		const randomX = getRandomInt(0,worldWidth);
 		let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
-		let newBlock = new Block(startPos, randomBlockShape, blocksMade);
+		let newBlock = new Block(startPos, randomBlockShape);
 
-		blocksMade++;
 		blocks.push(newBlock);
 
 		for (let i = 0; i < getRandomInt(0,4); i++){
 			newBlock.rotate() //randomize starting shape rotations
-			newBlock.flip();
+			newBlock.mirrorAlongYAxis();
 		}
 
 		//TODO Flip bocks 
@@ -315,20 +311,19 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			
 		},
 
-		spawnRow : () => { //for debugging only
-				console.log('spawning row');
-				//should spawn blocks of blockType
-				// let startPos = [18, worldHeight-2]; //need buffer of two for drawing method to stay in range
+		// spawnRow : () => { //for debugging only
+		// 		console.log('spawning row');
+		// 		//should spawn blocks of blockType
+		// 		// let startPos = [18, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-				for (let i = 0; i < worldWidth; i++){
-					let startPos = [i, worldHeight-2]; //need buffer of two for drawing method to stay in range
+		// 		for (let i = 0; i < worldWidth; i++){
+		// 			let startPos = [i, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-					let newBlock = new Block(startPos, BlockShapes.SINGLE, blocksMade);
-					blocksMade++;
-					blocks.push(newBlock);
-					flags.BLOCK = true; //Blocks need redraw
-				}
-		},
+		// 			let newBlock = new Block(startPos, BlockShapes.SINGLE);
+		// 			blocks.push(newBlock);
+		// 			flags.BLOCK = true; //Blocks need redraw
+		// 		}
+		// },
 		
 
 		spinDebris : (direction) => { 
@@ -354,12 +349,12 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		spinBlocks : (direction) => { //this is somehow effecting other blocks than those intended? BUG
 			for (let block of blocks) {
-				// let proposedBlock = block.rotatedClone(direction);
-				// if (blockFitsIn(debrisField, proposedBlock)){
+				let proposedBlock = block.rotatedClone(direction);
+				if (blockFitsIn(debrisField, proposedBlock)){
 					block.rotate(direction);
 					flags.BLOCK = true;
 					flags.BLOCKSPUN = true;
-				// }
+				}
 			}
 		}
 	}
@@ -370,7 +365,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 	return {
 
 		tick: (actionList, delta) => {
-			
+
 			scoreMultiplier = 1;
 
 			for (let flag in flags){

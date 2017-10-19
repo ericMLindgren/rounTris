@@ -12,13 +12,14 @@ const shapeCopy = (baseShape) => {
 	return newShape;
 }
 
-export default function Block(pos, shape, idNum){ //{position:,shape:,momentum:}
+let blocksMade = 0;
+export default function Block(pos, shape){ //{position:,shape:,momentum:}
+	blocksMade++;
 
 	let position = pointify(pos);
 	
-	
 	const momentum = [0,-1];
-	const id = idNum;
+	const id = blocksMade;
 	const blockShape = shapeCopy(shape);
 
 
@@ -54,7 +55,8 @@ export default function Block(pos, shape, idNum){ //{position:,shape:,momentum:}
 				}
 			}
 
-			return new Block(position, {shape: newShape}); 
+			blocksMade--; //Don't increment total block count for these hypothetical blocks
+			return new Block(position, newShape); 
 		},
 
 		rotate:  (direction) => {
@@ -78,9 +80,9 @@ export default function Block(pos, shape, idNum){ //{position:,shape:,momentum:}
 			}
 		},
 
-		flip: () => {
+		mirrorAlongYAxis: () => {
 			for (let piece of blockShape){
-				piece[0] = -piece[0];
+				piece[0] = -piece[0]; //This only works if all blockshapes are oriented vertically by default; 
 			}
 		}
 	};
