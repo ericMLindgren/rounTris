@@ -5,13 +5,12 @@ import Block from './Block';
 import {addPoints, subPoints, pointify, getRandomInt} from './PointHelpers';
 
 
-const BlockTypes = [
-	{shape:[[0,0]], momentum:[1,-1]}, //Meteor
-	{shape:[[0,-2],[0,-1],[0,0],[0,1]], momentum:[0,-1]}, // I
-	{shape:[[-1,0],[0,0],[0,1],[0,2]], momentum:[0,-1]}, // L 
-	{shape:[[-1,0],[0,0],[1,0],[0,1]], momentum:[0,-1]}, // T:
-	{shape:[[-1,0],[0,0],[0,1],[1,1]], momentum:[0,-1]}, // Z      
-	{shape:[[-1,0],[0,0],[-1,1],[0,1]], momentum:[0,-1]}, // O      
+const BlockShapes = [
+	[[0,-2],[0,-1],[0,0],[0,1]], // I
+	// [[-1,0],[0,0],[0,1],[0,2]], //  L 
+	// [[-1,0],[0,0],[1,0],[0,1]], //  T
+	// [[-1,0],[0,0],[0,1],[1,1]], //  Z      
+	// [[-1,0],[0,0],[-1,1],[0,1]] // O      
 ]
 
 
@@ -285,14 +284,13 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		spawnTick : () => {
 			
-			const randomBlockType = BlockTypes[getRandomInt(1,BlockTypes.length)];
+			const randomBlockShape = BlockShapes[getRandomInt(0,BlockShapes.length)];
 			const randomX = getRandomInt(0,worldWidth);
 
 
 			let startPos = [randomX, worldHeight-2]; //need buffer of two for drawing method to stay in range
-			let newBlock = new Block(startPos, randomBlockType, blocksMade);
-			for (let i = 0; i < getRandomInt(0,4); i++) 
-				newBlock.rotate()
+			let newBlock = new Block(startPos, randomBlockShape, blocksMade);
+
 			blocksMade++;
 			blocks.push(newBlock);
 
@@ -312,7 +310,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				for (let i = 0; i < worldWidth; i++){
 					let startPos = [i, worldHeight-2]; //need buffer of two for drawing method to stay in range
 
-					let newBlock = new Block(startPos, BlockTypes.SINGLE, blocksMade);
+					let newBlock = new Block(startPos, BlockShapes.SINGLE, blocksMade);
 					blocksMade++;
 					blocks.push(newBlock);
 					flags.BLOCK = true; //Blocks need redraw
@@ -341,14 +339,14 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			flags.DEBRISSPUN = true;
 		},
 
-		spinBlocks : (direction) => {
+		spinBlocks : (direction) => { //this is somehow effecting other blocks than those intended? BUG
 			for (let block of blocks) {
-				let proposedBlock = block.rotatedClone(direction);
-				if (blockFitsIn(debrisField, proposedBlock)){
+				// let proposedBlock = block.rotatedClone(direction);
+				// if (blockFitsIn(debrisField, proposedBlock)){
 					block.rotate(direction);
 					flags.BLOCK = true;
 					flags.BLOCKSPUN = true;
-				}
+				// }
 			}
 		}
 	}
@@ -388,8 +386,12 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			if (checkLoss())
 				flags.LOSS = true;
 
-			if (!hasTicked) //draw debris on the very first tick to catch start state
-				flags.DEBRIS = true;
+			if (!hasTicked){ //draw debris on the very first tick to catch start state
+				
+				worldActions.spawnTick(); //and spawns a block right away
+				hasTicked = true;
+			}
+			flags.DEBRIS = true;
 
 			return {	//return world object to be passed to view for drawing
 					x: worldWidth,

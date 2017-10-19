@@ -3,20 +3,34 @@
 
 import {addPoint, subPoint, pointify, getRandomInt} from './PointHelpers';
 
+const shapeCopy = (baseShape) => {
+	let newShape = [];
 
-export default function Block(pos, propOb, startID){ //{position:,shape:,momentum:}
+	for (let piece of baseShape){
+		newShape.push([piece[0], piece[1]]);
+	}
+	console.log()
+	return newShape;
+}
+
+export default function Block(pos, shape, idNum){ //{position:,shape:,momentum:}
 
 	let position = pointify(pos);
-	const blockShape = propOb.shape;
-	const momentum = propOb.momentum;
-	const id = startID;
+	
+	
+	const momentum = [0,-1];
+	const id = idNum;
+	const blockShape = shapeCopy(shape);
+	console.log('inited with shape:', blockShape);
 
 	const rotate = (direction) => {
 		for (let piece of blockShape){
 			if (direction == 'clockwise'){
+
 				//Rotate coordinates
 				let newX = piece[1];
 				let newY = -piece[0];
+				
 				//Set old shape to rotated
 				piece[0] = newX;
 				piece[1] = newY;
@@ -31,8 +45,11 @@ export default function Block(pos, propOb, startID){ //{position:,shape:,momentu
 	};
 
 
-	for (let i = 0; i < getRandomInt(0,5); i++) 
-		rotate() //randomize starting shape
+	// for (let i = 0; i < getRandomInt(0,5); i++)
+	// {
+	// 	console.log('randomizing block')
+	// 	rotate() //randomize starting shape
+	// }
 
 	//TODO put appearance details in here so that view can draw unique shapes
 
