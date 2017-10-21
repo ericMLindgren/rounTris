@@ -29,7 +29,8 @@ export default function View() {
 		  blockLayer = new paper.Layer(),
 		  blockPreviewLayer = new paper.Layer(),
 		  debrisLayer = new paper.Layer(),
-		  menuLayer = new paper.Layer();
+		  menuLayer = new paper.Layer(),
+		  HUDLayer = new paper.Layer();
 
 
 	//GameBoard Objects TODO Deprecate these in favor of layers for all tasks
@@ -98,7 +99,7 @@ export default function View() {
 			allRings[worldState.lossHeight].strokeWidth = worldColors.lossStrokeWidth;
 
 			//Create a passive animation for pulsating barrier
-			passiveAnimationList["lossHeightPulse"] = (event) => {allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*5))*.5+1}
+			passiveAnimationList["lossHeightPulse"] = (event) => {allRings[worldState.lossHeight].strokeWidth = (Math.sin(event.time*7.5))*.5+1}
 
 		};
 
@@ -128,17 +129,6 @@ export default function View() {
 				        blockReps.push(newBlockRep); //add to list to remove later
 				    }
 				}
-
-				//Draw block previews
-
-				while (blockPreviewLayer.children.length>0)
-					blockPreviewLayer.children.pop().remove();
-
-				// blockPreviewLayer.activate()
-				for (let block of worldState.blocks){
-					//If block is out of frame:
-						drawBlockPreview(block);
-				}
 			}
 
 			if (worldState.flags.DEBRIS) {
@@ -157,13 +147,26 @@ export default function View() {
 				//Draw new debris:
 				for (let dX = 0; dX < worldState.x; dX++){
 					for (let dY = 0; dY < worldState.y; dY++){
-						// console.log('reading x: ' + dX + ' y: '+ dY);
 						if (worldState.debris[dX][dY]){
 							const newDebrisRep = drawAtPos({x: dX, y: dY} , debrisStyle, worldState);
 			        		debrisReps.push(newDebrisRep); //add to list to remove later
 						}
 					}
 				}
+			}
+
+			//Draw block previews
+			//TODO if we want nice floatation better not to destroy constantly
+			//That means only creating once when new blocks arrive
+			if (worldState.newBlocks.length > 0)
+				blockPreviewLayer.removeChildren();
+
+			// blockPreviewLayer.activate()
+			blockPreviewLayer.activate();
+			for (let block of worldState.newBlocks){
+				//If block is out of frame:
+					console.log('drawing preview')
+					drawBlockPreview(block);
 			}
 		}
 	}
@@ -202,68 +205,97 @@ export default function View() {
 			    fontWeight: 'bold',
 			    fontSize: propOb.size
 			});
-
 		text.position = propOb.position;
 		text.onClick = propOb.callback;
 
+		return text;
+
 	}
 
-	//makes individual pieces
-	const smallSquare = (position) => {
-		console.log('drawing small square at', position)
-		return paper.Path.Rectangle({
-	        point: position,
-	        size: [20,20],
-	        fillColor: 'black',
-	        strokeColor: 'white'
-	    });
+	const drawHUD = (worldState) => {
+		const buffer = 20;
+
+		HUDLayer.activate();
+
+		HUDLayer.removeChildren();
+
+		const button = new paper.PointText({
+				point: paper.view.center,
+			    content: 'SCORE: ' + worldState.score,
+			    fillColor: 'black',
+			    fontFamily: 'Courier New',
+			    fontWeight: 'bold',
+			    fontSize: 20
+			});
+
+		button.position = pointify([button.bounds.width/2+buffer/1.3,paper.view.bounds.height-buffer])
 	}
 
 	const drawBlockPreview = (block) => {
-
-		//Need to translate block shape to below grid;
-
-		//Defines block shape
-		let grid = [0,0,0,
-					1,1,1,
-					0,0,0];
+		const pieceSize = 20;
 
 
-		let drawPos = new paper.Point(300,100);
-		const blockRep = new paper.Group();
-
-		for (let i in grid){
-		    if (grid[i]) {
-		        blockRep.addChild(smallSquare(drawPos))
-		    }
-		    
-		    if ((parseInt(i)+1)%3==0){
-		        drawPos = addPoints(drawPos, [-40,20])
-		        
-		    } else {
-		        drawPos = addPoints(drawPos, [20,0])
-		    }
+		//makes individual pieces
+		const smallSquare = (position) => {
+			position = pointify(position);
+			return paper.Path.Rectangle({
+		        point: position,
+		        size: [pieceSize,pieceSize],
+		        fillColor: 'black',
+		        strokeColor: new paper.Color(1)
+		    });
 		}
 
-		//Creates a drop shadow and adds to blockRep group
-		const shadow = blockRep.clone();
-		shadow.opacity = .2;
-		shadow.position = addPoints(shadow.position, [-5, 5]);
-		blockRep.addChild(shadow);
+
+		//Draws shape from piece coordinates
+		let rootPos = new paper.Point(0,0);
+		const blockRep = new paper.Group();
+
+		for (let piece of block.shape()){
+			let thisPos = addPoints(rootPos, [piece[0]*pieceSize, piece[1]*-pieceSize]);
+			blockRep.addChild(smallSquare(thisPos))
+		}
+
 
 		//Draws preview bubble
-		const bubble = new paper.Path.Circle({
-		    center: blockRep.position,
-		    radius: 50,
+		const bubble = new paper.Path.RegularPolygon({
+		    center: [50,50],
+		    radius: pieceSize*3,
+		    sides: 6,
 		    fillColor: 'white',
 		    strokeColor: 'black',
-		    strokeWidth: 2
+		    // strokeWidth: 2
 		});
 
+		bubble.opacity = .9;
 		bubble.sendToBack();
+		blockRep.position = bubble.position;
 
-		const previewGroup = new paper.Group(bubble, blockRep);
+		//Creates a drop shadow and adds to blockRep group
+		const bubbleShadow = bubble.clone();
+		bubbleShadow.opacity = .2;
+		bubbleShadow.fillColor = 'black';
+		bubbleShadow.position = addPoints(bubbleShadow.position, [pieceSize/2, pieceSize/2]);
+		
+
+		const previewGroup = new paper.Group(bubbleShadow, bubble, blockRep);
 		previewGroup.scale(.5,.5);
+		previewGroup.myID = block.id;
+
+		//Add blockRepFloat to animation list
+		//TODO code works only if we stop redrawing constantly
+		//Or rework how time is being passed in here...
+
+
+		// passiveAnimationList["blockRepFloat"] = (event) => {
+
+		// 	const fraction = .08 //controls radius of circle
+    
+		//     const xMod = fraction*Math.sin(event.time);
+		//     const yMod = fraction*Math.cos(event.time);
+
+		// 	blockRep.position = addPoints(blockRep.position, [xMod, yMod]);
+		// }
 
 		return previewGroup;
 
@@ -274,28 +306,32 @@ export default function View() {
 		blockLayer.opacity = newOpacity;
 		debrisLayer.opacity = newOpacity;
 		boardLayer.opacity = newOpacity;
+		blockPreviewLayer.opacity = newOpacity;
 
 	}
 
 	const clearAllLayers = () => {
 		for (let layer of paper.project.layers){
-			clearLayer(layer);
+			layer.removeChildren();
 		}
-	}
-
-	const clearLayer = (layerToClear) => {
-		for (let i = layerToClear.children.length-1; i>-1; i--){
-				layerToClear.children[i].remove();
-			}
 	}
 
 	const startScreen = () => {
 		clearAllLayers();
-		textButton({
+		const beginButton = textButton({
 				content: 'BEGIN', 
 				position: paper.view.center,
 				size: 50,
 				callback: controller.startGame});
+
+		const instructions = 'q,w        - rotate blocks \nleft,right -  rotate world \ndown 	     -    drop block \nspace      -         pause \n'
+		// const instructions = 'q,w - rotate blocks \nleft,right - rotate world \ndown - drop block \nspace - pause \n'
+
+		textButton({
+				content: instructions, 
+				position: addPoints(paper.view.center, [0,100]),
+				size: 20,
+				callback: null});
 	}
 
 	const loadScreen = () => {
@@ -315,7 +351,7 @@ export default function View() {
 		loadingLogo = new  paper.Path.RegularPolygon({
 					radius: 10,
 					center: addPoints(paper.view.center, [0,50]),
-					sides: 4,
+					sides: 6,
 					strokeColor: 'black',
 					strokeWidth: 3,
 					fillColor: 'ghostwhite'
@@ -325,7 +361,6 @@ export default function View() {
 
 	const passiveAnimations = (event) => {
 		for (let key in passiveAnimationList){
-			console.log('Running animation:', key)
 			passiveAnimationList[key](event)
 		}
 	}
@@ -335,8 +370,10 @@ export default function View() {
 
 	return {
 		tick: (worldState, event) => {
-			if (worldState)
+			if (worldState){
 				updateBoard(worldState);
+				drawHUD(worldState);
+			}
 			passiveAnimations(event);
 		},
 
@@ -349,7 +386,7 @@ export default function View() {
 		startScreen: startScreen,
 
 		playScreen: (gameState) => {
-			clearLayer(menuLayer);
+			menuLayer.removeChildren();
 			drawBoard(gameState);
 			setGameOpacity(1);
 		},
@@ -364,7 +401,7 @@ export default function View() {
 		},
 
 		unPauseScreen: () => {
-			clearLayer(menuLayer);
+			menuLayer.removeChildren();
 			setGameOpacity(1);
 		},
 
@@ -388,7 +425,6 @@ export default function View() {
 			controller = newController;
 			paper.view.onKeyDown = controller.keyDown;
 			paper.view.onFrame = (event) => {
-
 
 				if (loadingLogo)
 					loadingLogo.rotate(1);

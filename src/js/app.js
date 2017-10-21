@@ -8,14 +8,12 @@ import SoundManager from './SoundManager';
 
 
 const keyLayout = { //Learn how to pass arguments in this scheme TODO
-	'left' : {action: 'spinDebris', args:'counterClockwise'},
-	'right' : {action: 'spinDebris', args:'clockwise'},
-	'down' : {action: 'rushDrop', args: null},
-	'q' : {action: 'spinBlocks', args:'clockwise'},
-	'w' : {action: 'spinBlocks', args:'counterClockwise'},
-	's' : {action: 'spawnBlock', args:null},
-	'y' : {action: 'debug', args:null},
-	'r' : {action: 'spawnRow', args:null},
+	'left': {action: 'spinDebris', args:'counterClockwise'},
+	'right': {action: 'spinDebris', args:'clockwise'},
+	'down': {action: 'rushDrop', args: null},
+	'up': {action: 'spinBlocks', args:'clockwise'},
+	'q': {action: 'spinBlocks', args:'clockwise'},
+	'w': {action: 'spinBlocks', args:'counterClockwise'},
 };
 
 const soundSources = {

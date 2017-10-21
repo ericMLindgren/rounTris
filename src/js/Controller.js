@@ -30,12 +30,12 @@ export default function Controller(argOb) { //Controller is initialized with dim
 			//Act on new state
 			if (gameState=='paused'){
 				playMusic.stop();
-				pauseMusic = soundManager.playSound('space_music', 2, true);
+				// pauseMusic = soundManager.playSound('space_music', 2, true);
 				
 				view.pauseScreen();
 			}
 			else{
-				pauseMusic.stop();
+				// pauseMusic.stop();
 				playMusic = soundManager.playSound('play_music', 1, true);
 
 				view.unPauseScreen();
@@ -93,7 +93,6 @@ export default function Controller(argOb) { //Controller is initialized with dim
 				const worldState = world.tick(actionBuffer.bufferDump(), event.delta);
 				view.tick(worldState, event);
 
-
 				//SoundManager stuff, should abstract
 				if (worldState.flags.BLOCKSPUN)
 					soundManager.playSound('blockSpun'); //increase pitch the higher the block lands				
@@ -109,7 +108,7 @@ export default function Controller(argOb) { //Controller is initialized with dim
 				if (worldState.flags.LOSS)
 					loseGame();
 			} else if (gameState=='paused') {
-				view.tick(event); //But we still get to tick animations
+				view.tick(null, event); //But we still get to tick animations
 			}
 		}
 	};

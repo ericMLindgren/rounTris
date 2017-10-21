@@ -6,7 +6,7 @@ import {addPoints, subPoints, pointify, getRandomInt} from './PointHelpers';
 
 
 const BlockShapes = [
-	[[0,-2],[0,-1],[0,0],[0,1]], // I
+	[[0,-1],[0,0],[0,1],[0,2]], // I
 	[[-1,0],[0,0],[0,1],[0,2]], //  L 
 	[[-1,0],[0,0],[1,0],[0,1]], //  T
 	[[-1,0],[0,0],[0,1],[1,1]], //  Z      
@@ -18,8 +18,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 	//TODO Abstract this stuff
 	let score = 0;
-	let scoreForBlockSpawn = 75;
-	let scoreForRowComplete = 1000;	
+	let pointsForBlockLand = 75;
+	let pointsForRowCompleted = 1000;	
 	let scoreMultiplier = 1;
 
 
@@ -34,7 +34,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		LOSS : false
 	}
 
-	const ALERTS = [];
+	let ALERTS = [];
+	let NEW_BLOCKS = [];
 
 
 	let inMeteorShower = false;
@@ -149,6 +150,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		deadBlockIndices.push(blocks.indexOf(block)); //flag block for garbage collection
 
+		scorePoints(pointsForBlockLand);
+
 		flags.BLOCKHIT = block.position().y+1; //lets us vary playback rate of FX based on height of impact
 		flags.DEBRIS = true; //Debris needs redraw
 		flags.BLOCK = true; //need to remove dead blocks
@@ -186,7 +189,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 			for (let i = worldWidth-1; i >= 0; i--){
 				debrisField[i].splice(rowNum,1);
 			} 
-			scorePoints(scoreForRowComplete);
+			scorePoints(pointsForRowCompleted);
 			scoreMultiplier++;
 		}
 
@@ -257,6 +260,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 		let newBlock = new Block(startPos, randomBlockShape);
 
 		blocks.push(newBlock);
+		NEW_BLOCKS.push(newBlock); //TODO can we clean this up?
 
 		for (let i = 0; i < getRandomInt(0,4); i++){
 			newBlock.rotate() //randomize starting shape rotations
@@ -306,9 +310,7 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 			flags.BLOCK = true; //Blocks need redraw
 			flags.BLOCKSPAWNED = true;
-			spawnTimer = 0;
-			scorePoints(scoreForBlockSpawn);
-			
+			spawnTimer = 0;			
 		},
 
 		// spawnRow : () => { //for debugging only
@@ -366,7 +368,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 
 		tick: (actionList, delta) => {
 
+			//Reset trackers
 			scoreMultiplier = 1;
+			ALERTS = [];
+			NEW_BLOCKS = [];
 
 			for (let flag in flags){
 				flags[flag] = false;
@@ -398,7 +403,10 @@ export default function World (worldWidth, worldHeight, lossHeight){
 				
 				worldActions.spawnTick(); //and spawns a block right away
 				hasTicked = true;
+				console.log('first tick:', NEW_BLOCKS)
 			}
+
+			//TODO cleanup, right now just forces constant redraw of debris
 			flags.DEBRIS = true;
 
 			return {	//return world object to be passed to view for drawing
@@ -411,7 +419,8 @@ export default function World (worldWidth, worldHeight, lossHeight){
 					coreRadius: 25,
 					wrapPos: wrapPos,
 					score: score,
-					alerts: ALERTS
+					alerts: ALERTS,
+					newBlocks: NEW_BLOCKS
 			}		
 		},
 

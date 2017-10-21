@@ -13,27 +13,36 @@ const shapeCopy = (baseShape) => {
 }
 
 let blocksMade = 0;
-export default function Block(pos, shape){ //{position:,shape:,momentum:}
+function nextBlockId() {
 	blocksMade++;
+	return blocksMade;
+	
+}
+
+
+export default function Block(pos, shape){ //{position:,shape:,momentum:}
 
 	let position = pointify(pos);
 	
 	const momentum = [0,-1];
-	const id = blocksMade;
-	const blockShape = shapeCopy(shape);
+	const id = nextBlockId();
+	// const baseShape = shape; // deprecated
+	const thisBlocksShape = shapeCopy(shape);
 
 
 	//TODO put appearance details in here so that view can draw unique shapes
 
 	return {
 
-		id : () => id,
+		id: () => id,
 
-		position : () => position,
+		position: () => position,
 
-		momentum : () => momentum,
+		momentum: () => momentum,
 
-		shape : () => blockShape,
+		shape: () => thisBlocksShape,
+
+		baseShape: () => baseShape,
 
 		moveTo: (newPos) => {
 			newPos = pointify(newPos);
@@ -42,7 +51,7 @@ export default function Block(pos, shape){ //{position:,shape:,momentum:}
 
 		rotatedClone: (direction) => {
 			let newShape = [];
-			for (let piece of blockShape){
+			for (let piece of thisBlocksShape){
 				if (direction == 'clockwise'){
 					let newX = piece[1];
 					let newY = -piece[0];
@@ -60,7 +69,7 @@ export default function Block(pos, shape){ //{position:,shape:,momentum:}
 		},
 
 		rotate:  (direction) => {
-			for (let piece of blockShape){
+			for (let piece of thisBlocksShape){
 				if (direction == 'clockwise'){
 
 					//Rotate coordinates
@@ -81,7 +90,7 @@ export default function Block(pos, shape){ //{position:,shape:,momentum:}
 		},
 
 		mirrorAlongYAxis: () => {
-			for (let piece of blockShape){
+			for (let piece of thisBlocksShape){
 				piece[0] = -piece[0]; //This only works if all blockshapes are oriented vertically by default; 
 			}
 		}

@@ -3,7 +3,7 @@
 //Will manage all of the music and FX for our game
 //needs to maintain seperate buffers for looping music and 
 //one-off sound effects
-const MUTE = true
+ const MUTE = false // DEBUG ONLY
 
 export default function SoundManager(soundSources, callBack) {
 	//These allow a callback once sounds are loaded:
