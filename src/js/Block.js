@@ -1,99 +1,104 @@
 //Block.js
 //Block class that will be used in rounTris.js Game
 
-import {addPoint, subPoint, pointify, getRandomInt} from './PointHelpers';
+import { addPoint, subPoint, pointify, getRandomInt } from "./PointHelpers";
 
-const shapeCopy = (baseShape) => {
-	let newShape = [];
+const shapeCopy = baseShape => {
+    let newShape = [];
 
-	for (let piece of baseShape){
-		newShape.push([piece[0], piece[1]]);
-	}
-	return newShape;
-}
+    for (let piece of baseShape) {
+        newShape.push([piece[0], piece[1]]);
+    }
+    return newShape;
+};
 
 let blocksMade = 0;
 function nextBlockId() {
-	blocksMade++;
-	return blocksMade;
-	
+    blocksMade++;
+    return blocksMade;
 }
 
+export default function Block(shape) {
+    //{position:,shape:,momentum:}
 
-export default function Block(pos, shape){ //{position:,shape:,momentum:}
+    let position = null;
 
-	let position = pointify(pos);
-	
-	const momentum = [0,-1];
-	const id = nextBlockId();
-	// const baseShape = shape; // deprecated
-	const thisBlocksShape = shapeCopy(shape);
+    const momentum = [0, -1];
+    const id = nextBlockId();
+    const baseShape = shape; // deprecated
+    const thisBlocksShape = shapeCopy(shape);
+
+    //TODO put appearance details in here so that view can draw unique shapes
 
 
-	//TODO put appearance details in here so that view can draw unique shapes
+    const rotate = (direction) => {
+        for (let piece of thisBlocksShape) {
+            if (direction == "clockwise") {
+                //Rotate coordinates
+                let newX = piece[1];
+                let newY = -piece[0];
 
-	return {
+                //Set old shape to rotated
+                piece[0] = newX;
+                piece[1] = newY;
+            } else {
+                let newX = -piece[1];
+                let newY = piece[0];
+                piece[0] = newX;
+                piece[1] = newY;
+            }
+        }
+    };
 
-		id: () => id,
+    const mirrorAlongYAxis = () => {
+        for (let piece of thisBlocksShape) {
+            piece[0] = -piece[0]; //This only works if all blockshapes are oriented vertically by default;
+        }
+    };
 
-		position: () => position,
+    return {
+        id: () => id,
 
-		momentum: () => momentum,
+        position: () => position,
 
-		shape: () => thisBlocksShape,
+        momentum: () => momentum,
 
-		baseShape: () => baseShape,
+        shape: () => thisBlocksShape,
 
-		moveTo: (newPos) => {
-			newPos = pointify(newPos);
-			position = newPos;
-		},
+        baseShape: () => baseShape,
 
-		rotatedClone: (direction) => {
-			let newShape = [];
-			for (let piece of thisBlocksShape){
-				if (direction == 'clockwise'){
-					let newX = piece[1];
-					let newY = -piece[0];
-					newShape.push([newX,newY]);
-				}
-				else {
-					let newX = -piece[1];
-					let newY = piece[0];
-					newShape.push([newX,newY]);
-				}
-			}
+        moveTo: newPos => {
+            newPos = pointify(newPos);
+            position = newPos;
+        },
 
-			blocksMade--; //Don't increment total block count for these hypothetical blocks
-			return new Block(position, newShape); 
-		},
+        rotatedClone: direction => {
+            let newShape = [];
+            for (let piece of thisBlocksShape) {
+                if (direction == "clockwise") {
+                    let newX = piece[1];
+                    let newY = -piece[0];
+                    newShape.push([newX, newY]);
+                } else {
+                    let newX = -piece[1];
+                    let newY = piece[0];
+                    newShape.push([newX, newY]);
+                }
+            }
 
-		rotate:  (direction) => {
-			for (let piece of thisBlocksShape){
-				if (direction == 'clockwise'){
+            blocksMade--; //Don't increment total block count for these hypothetical blocks
+            const retBlock = new Block(newShape);
+            retBlock.moveTo(position);
+            return retBlock;
+        },
 
-					//Rotate coordinates
-					let newX = piece[1];
-					let newY = -piece[0];
-					
-					//Set old shape to rotated
-					piece[0] = newX;
-					piece[1] = newY;
-				}
-				else {
-					let newX = -piece[1];
-					let newY = piece[0];
-					piece[0] = newX;
-					piece[1] = newY;
-				}
-			}
-		},
+        rotate: rotate,
 
-		mirrorAlongYAxis: () => {
-			for (let piece of thisBlocksShape){
-				piece[0] = -piece[0]; //This only works if all blockshapes are oriented vertically by default; 
-			}
-		}
-	};
+        randomize: () => {
+            for (let i = 0; i < getRandomInt(0, 5); i++) { 
+                rotate(); //randomize starting shape rotations
+                mirrorAlongYAxis();
+            }
+        }
+    };
 }
-

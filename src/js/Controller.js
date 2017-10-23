@@ -1,115 +1,113 @@
 //Controller.js --- Controller Object for rounTris round tetris-style game
 
 // Handles keyboard input and calls world/view methods as appropriate
-import World from './World';
+import World from "./World";
 
+export default function Controller(argOb) {
+    //Controller is initialized with dimensions of the world
+    let view = null;
+    let world = null;
+    let actionBuffer = null;
+    let soundManager = null;
 
-export default function Controller(argOb) { //Controller is initialized with dimensions of the world
-	let view = null;
-	let world = null;
-	let actionBuffer = null;
-	let soundManager = null;
+    let pauseMusic = null;
+    let endMusic = null;
+    let playMusic = null;
 
-	let pauseMusic = null;
-	let endMusic = null;
-	let playMusic = null;
+    let gameState = "stopped";
+    let PAUSED = false;
 
-	let gameState = 'stopped';
-	let PAUSED = false;
+    const togglePause = () => {
+        if (gameState != "stopped" && gameState != "loss") {
+            //Switch state
+            if (gameState == "paused") gameState = "running";
+            else gameState = "paused";
 
+            //Act on new state
+            if (gameState == "paused") {
+                playMusic.stop();
+                // pauseMusic = soundManager.playSound('space_music', 2, true);
 
-	const togglePause = () => {
-		if (gameState!='stopped' && gameState!='loss'){		
-			//Switch state		
-			if (gameState=='paused')
-				gameState='running';
-			else
-				gameState='paused'
+                view.pauseScreen();
+            } else {
+                // pauseMusic.stop();
+                playMusic = soundManager.playSound("play_music", 1, true);
 
+                view.unPauseScreen();
+            }
+        }
+    };
 
-			//Act on new state
-			if (gameState=='paused'){
-				playMusic.stop();
-				// pauseMusic = soundManager.playSound('space_music', 2, true);
-				
-				view.pauseScreen();
-			}
-			else{
-				// pauseMusic.stop();
-				playMusic = soundManager.playSound('play_music', 1, true);
+    const loseGame = () => {
+        gameState = "loss";
+        playMusic.stop();
 
-				view.unPauseScreen();
-			}
-		}
-	};
+        soundManager.playSound("game_over", 1, false);
+        playMusic = soundManager.playSound("space_music", 1, false);
 
-	const loseGame = () => {
-		gameState = 'loss';
-		playMusic.stop();
+        view.lossScreen();
+    };
 
-		soundManager.playSound('game_over', 1, false);
-		playMusic = soundManager.playSound('space_music', 1, false);
+    return {
+        startGame: () => {
+            console.log("Starting Game!!!!");
 
-		view.lossScreen();
-	}
+            world = new World(...argOb);
 
-	return {
-		startGame: () => {
-			console.log('Starting Game!!!!');
+            view.playScreen(world.tick(actionBuffer.bufferDump(), 0));
+            if (playMusic) playMusic.stop();
+            playMusic = soundManager.playSound("play_music", 1, true); //play on a loop
 
-			world = new World(...argOb);
+            gameState = "running"; //Feels weird this isn't a function TODO
+            //Start loop
+            //start music
+        },
 
-			view.playScreen(world.tick(actionBuffer.bufferDump(), 0));
-			if (playMusic)
-				playMusic.stop();
-			playMusic = soundManager.playSound('play_music', 1, true); //play on a loop
+        setView: newView => {
+            view = newView;
+        },
 
-			gameState = 'running'; //Feels weird this isn't a function TODO
-			//Start loop
-			//start music
-		},
+        setActionBuffer: newBuffer => {
+            actionBuffer = newBuffer;
+        },
 
-		setView: (newView) => {
-			view = newView;
-		},
+        setSoundManager: newManager => {
+            soundManager = newManager;
+        },
 
-		setActionBuffer: (newBuffer) => {
-			actionBuffer = newBuffer;
-		},
+        keyDown: event => {
+            if (event.key == "space") togglePause();
+            else if (event.key == "m") soundManager.muteToggle();
+            else actionBuffer.keyIn(event.key);
+        },
 
-		setSoundManager: (newManager) => {
-			soundManager = newManager;
-		},
+        tick: event => {
+            if (gameState == "running") {
+                const worldState = world.tick(
+                    actionBuffer.bufferDump(),
+                    event.delta
+                );
+                view.tick(worldState, event);
 
-		keyDown: (event) => {
-			if (event.key == 'space')
-				togglePause();
-			 else
-				actionBuffer.keyIn(event.key);
-		},
-
-		tick: (event) => {
-			if (gameState == 'running'){
-				const worldState = world.tick(actionBuffer.bufferDump(), event.delta);
-				view.tick(worldState, event);
-
-				//SoundManager stuff, should abstract
-				if (worldState.flags.BLOCKSPUN)
-					soundManager.playSound('blockSpun'); //increase pitch the higher the block lands				
-				// if (worldState.flags.DEBRISSPUN){ //spin noise is too abrassive
-				// 	soundManager.playSound('debrisSpun'); //increase pitch the higher the block lands				
-				// }
-				if (worldState.flags.BLOCKHIT)
-					soundManager.playSound('blockLanded', 1+worldState.flags.BLOCKHIT/10); //increase pitch the higher the block lands
-				if (worldState.flags.ROWSDESTROYED)
-					soundManager.playSound('destroy');
-				if (worldState.flags.BLOCKSPAWNED)
-					soundManager.playSound('woosh', 2);
-				if (worldState.flags.LOSS)
-					loseGame();
-			} else if (gameState=='paused') {
-				view.tick(null, event); //But we still get to tick animations
-			}
-		}
-	};
+                //SoundManager stuff, should abstract
+                if (worldState.flags.BLOCKSPUN)
+                    soundManager.playSound("blockSpun"); //increase pitch the higher the block lands
+                // if (worldState.flags.DEBRISSPUN){ //spin noise is too abrassive
+                // 	soundManager.playSound('debrisSpun'); //increase pitch the higher the block lands
+                // }
+                if (worldState.flags.BLOCKHIT)
+                    soundManager.playSound(
+                        "blockLanded",
+                        1 + worldState.flags.BLOCKHIT / 10
+                    ); //increase pitch the higher the block lands
+                if (worldState.flags.ROWSDESTROYED)
+                    soundManager.playSound("destroy");
+                if (worldState.flags.BLOCKSPAWNED)
+                    soundManager.playSound("woosh", 2);
+                if (worldState.flags.LOSS) loseGame();
+            } else if (gameState == "paused") {
+                view.tick(null, event); //But we still get to tick animations
+            }
+        }
+    };
 }
