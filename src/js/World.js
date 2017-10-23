@@ -122,7 +122,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             else makeDebrisFromBlock(block);
         }
 
-        clearDeadBlocks();
         dropTimer = 0; //reset the drop timer
     };
 
@@ -141,9 +140,12 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             let piecePos = addPoints(nextPos, piece);
 
             piecePos = wrapPos(piecePos);
-
-            if (debrisField[piecePos.x][piecePos.y] || piecePos.y < 0)
+            // console.log('live blocks', blocks)
+            if (debrisField[piecePos.x][piecePos.y] || piecePos.y < 0){
+                // console.log('canDrop failure by blockID:',block)
                 return false;
+            }
+
         }
 
         return true;
