@@ -119,7 +119,8 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
         for (let block of blocks) {
             if (canDrop(block)) dropBlock(block);
-            else makeDebrisFromBlock(block);
+            else if (flags.DEBRISSPUN == false)
+                makeDebrisFromBlock(block);
         }
 
         dropTimer = 0; //reset the drop timer
@@ -370,7 +371,8 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             NEW_BLOCKS = [];
 
             for (let flag in flags) {
-                flags[flag] = false;
+                if (flag != 'DEBRISSPUN')
+                    flags[flag] = false;
             }
 
             for (let action of actionList) {
@@ -380,6 +382,8 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             dropTimer += delta;
             if (dropTimer > dropRate) {
                 dropTick();
+                flags.DEBRISSPUN = false;
+                
             }
 
             spawnTimer += delta;
