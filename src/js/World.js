@@ -119,7 +119,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
         for (let block of blocks) {
             if (canDrop(block)) dropBlock(block);
-            else if (flags.DEBRISSPUN == false)
+            else if (flags.DEBRISSPUN == false) //lets player slide a little before block sticks
                 makeDebrisFromBlock(block);
         }
 
@@ -315,8 +315,10 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
                 while (canDrop(lowestBlock)) dropBlock(lowestBlock);
 
-                dropTick();
-                // makeDebrisFromBlock(lowestBlock);
+                //and destroy it
+                makeDebrisFromBlock(lowestBlock);
+                clearDeadBlocks();
+
                 //If there's no blocks, drop one
                 if (blocks.length<2)
                     worldActions.spawnTick();

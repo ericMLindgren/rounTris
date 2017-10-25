@@ -6,16 +6,27 @@
 
 export default function SoundManager(soundSources, callBack) {
     let soundsLoaded = 0;
-    var soundBuffers = {};
+    const fxBuffers = {};
+    const musicBuffers = [];
+
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     var context = new AudioContext();
     loadAllSources();
 
 
-    const volume = context.createGain();
-    let music = null;
-  
+    //Create music path
+    let musicSource = context.createBufferSource();
+    musicSource.loop = true;
+    const musicGain = context.createGain();
+    musicSource.connect(musicGain);
+    musicGain.connect(context.destination);
 
+    //Create fx path
+    const fxGain = context.createGain();
+    fxGain.connect(context.destination);
+
+    let musicVolume = 1;
+    let fxVolume = 1;
 
     //Loading from sources
     function loadAllSources() {
@@ -29,15 +40,18 @@ export default function SoundManager(soundSources, callBack) {
             callBack();
         }
 
-        function loadSound(url, bufferKey) {
-            var request = new XMLHttpRequest();
+        function loadSound(url, bufferKey, destinationBuffer) {
+            const request = new XMLHttpRequest();
             request.open("GET", url, true);
             request.responseType = "arraybuffer";
 
             // Decode asynchronously
             request.onload = function() {
                 context.decodeAudioData(request.response, function(buffer) {
-                    soundBuffers[bufferKey] = buffer;
+                    if (destinationBuffer instanceof Array)
+                        destinationBuffer.push(buffer);
+                    else
+                        destinationBuffer[bufferKey] = buffer;
                     logLoad();
                 });
             };
@@ -45,50 +59,73 @@ export default function SoundManager(soundSources, callBack) {
             request.send();
         }
 
-        for (var i in Object.keys(soundSources)) {
+        for (let key in soundSources) {
             //read audio files into buffers
+            let destinationBuffer;
+            if (key.match(/music_.+/))
+                destinationBuffer = musicBuffers
+            else
+                destinationBuffer = fxBuffers
+
             loadSound(
-                soundSources[Object.keys(soundSources)[i]],
-                Object.keys(soundSources)[i]
+                soundSources[key],
+                key,
+                destinationBuffer
             );
         }
     }
 
     return {
-        playSound: (bufferKey, rate, loop) => {
-                        
-            if (!rate) rate = 1;
-            var source = context.createBufferSource(); // creates a sound source
-            source.buffer = soundBuffers[bufferKey]; // tell the source which sound to play
-            source.connect(volume); // connect the source to the context's destination (the speakers)
-            volume.connect(context.destination);
-            source.playbackRate.value = rate;
+        playSound: (key, rate=1) => {
+            const fxSource = context.createBufferSource();
+            fxSource.connect(fxGain);
 
-            if (loop == true) {
-                source.loop = true;
-            }
+            fxSource.buffer = fxBuffers[key]; // tell the source which sound to play
+            fxSource.playbackRate.value = rate;
 
-            source.start(0);
-            return source;
+            fxSource.start(0);
         },
 
-        playMusicTrack: (trackNum) => {
+        playTrack: (trackNum, rate=1) => {
+            trackNum--; //Allow 1 indexed instead of 0 indexed, seems more natural
+            if (musicSource.buffer) //If the music is plugged in, stop 
+                musicSource.stop();
+            console.log('tracknum', trackNum, "\nmusicBuffers[tracknum]:",musicBuffers[trackNum]);
+            musicSource.buffer = musicBuffers[trackNum]; // tell the source which sound to play
+            musicSource.playbackRate.value = rate;
 
+            musicSource.start(0);
         },
 
-        pauseMusic: () => {
-
+        stopMusic: () => {
+            if (musicSource.buffer) //If the music is plugged in, stop             
+                musicSource.stop();
         },
 
         playMusic: () => {
 
         },
 
-        muteToggle: () => {
-            if (volume.gain.value == 0)
-                volume.gain.value = 1;
+        setMusicVolume: (newVolume) => {
+            musicVolume = newVolume;
+            musicGain.gain = newVolume;
+        },
+
+        setFXVolume: (newVolume) => {
+            fxVolume = newVolume;
+            fxGain.gain = newVolume;
+        },
+
+        toggleMute: () => {
+            if (musicGain.gain.value == 0)
+                musicGain.gain.value = musicVolume;
             else 
-                volume.gain.value = 0;
+                musicGain.gain.value = 0;
+
+            if (fxGain.gain.value == 0)
+                fxGain.gain.value = fxVolume;
+            else 
+                fxGain.gain.value = 0;
         }
     };
 }
