@@ -106,11 +106,7 @@ export default function View() {
             if (worldState.flags.BLOCK) {
                 blockLayer.activate();
 
-                //Set drawing style for block
-                const blockStyle = {
-                    //TODO this could be handled better maybe even using functions for values to allow for animation, would mean rethinking redraw rate.
-                    fillColor: worldColors.blockFill
-                };
+                
 
                 while (blockReps.length > 0) {
                     //Remove all block drawings
@@ -118,6 +114,10 @@ export default function View() {
                 }
 
                 for (let block of worldState.blocks) {
+
+                    //Set drawing style for block
+                    const blockStyle = block.style;
+
                     for (let piece of block.shape()) {
                         let piecePos = addPoints(block.position(), piece);
 

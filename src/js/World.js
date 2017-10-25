@@ -96,7 +96,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
     const debrisField = []; //should init debris field
 
-    const deadBlockIndices = []; //These are not debris but old blocks that need removal
+    let deadBlocks = []; //These are not debris but old blocks that need removal
 
     for (let x = 0; x < worldWidth; x++) {
         debrisField[x] = [];
@@ -123,14 +123,17 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 makeDebrisFromBlock(block);
         }
 
+        clearDeadBlocks(); //Clear any dead block objects
+
         dropTimer = 0; //reset the drop timer
     };
 
     const clearDeadBlocks = () => {
-        //refactor this for clarity TODO
-        while (deadBlockIndices.length > 0) {
-            blocks.splice(deadBlockIndices.pop(), 1);
+        for (let deadBlock of deadBlocks){
+            blocks.splice(blocks.indexOf(deadBlock),1);
         }
+
+        deadBlocks = [];
     };
 
     const canDrop = function(block) {
@@ -182,7 +185,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             debrisField[debrisPos.x][debrisPos.y] = 1;
         }
 
-        deadBlockIndices.push(blocks.indexOf(block)); //flag block for garbage collection
+        deadBlocks.push(block); //flag block for garbage collection
 
         scorePoints(pointsForBlockLand);
 
@@ -294,7 +297,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         debug: () => {
             // console.log("blocks: ", blocks);
             console.log("new blocks: ", NEW_BLOCKS);
-            // console.log("deadBlockIndices: ", deadBlockIndices);
+            // console.log("deadBlocks: ", deadBlocks);
         },
 
         rushDrop: () => {
@@ -312,7 +315,8 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
                 while (canDrop(lowestBlock)) dropBlock(lowestBlock);
 
-                makeDebrisFromBlock(lowestBlock);
+                dropTick();
+                // makeDebrisFromBlock(lowestBlock);
                 //If there's no blocks, drop one
                 if (blocks.length<2)
                     worldActions.spawnTick();
@@ -390,8 +394,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             if (spawnTimer > spawnRate) {
                 worldActions.spawnTick();
             }
-
-            clearDeadBlocks(); //Clear any dead block objects
 
             if (checkLoss()) flags.LOSS = true;
 

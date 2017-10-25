@@ -29,7 +29,10 @@ export default function Block(shape) {
     const thisBlocksShape = shapeCopy(shape);
 
     //TODO put appearance details in here so that view can draw unique shapes
-
+    const style = {
+        fillColor: {red:.5, green:.5, blue:.6},
+        // opacity: 1,
+    }
 
     const rotate = (direction) => {
         for (let piece of thisBlocksShape) {
@@ -99,6 +102,8 @@ export default function Block(shape) {
                 rotate(); //randomize starting shape rotations
                 mirrorAlongYAxis();
             }
-        }
+        },
+
+        style: style,
     };
 }

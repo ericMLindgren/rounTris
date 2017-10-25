@@ -5,61 +5,63 @@
 //one-off sound effects
 
 export default function SoundManager(soundSources, callBack) {
-    //These allow a callback once sounds are loaded:
     let soundsLoaded = 0;
-
-
-    function logLoad() {
-        soundsLoaded += 1;
-        if (soundsLoaded == Object.keys(soundSources).length)
-            finishedLoadingSound();
-    }
-
-    function finishedLoadingSound() {
-        callBack();
-    }
-
     var soundBuffers = {};
-
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     var context = new AudioContext();
-    const gainNode = context.createGain();
+    loadAllSources();
 
 
-    function loadSound(url, bufferKey) {
-        var request = new XMLHttpRequest();
-        request.open("GET", url, true);
-        request.responseType = "arraybuffer";
+    const volume = context.createGain();
+    let music = null;
+  
 
-        // Decode asynchronously
-        request.onload = function() {
-            context.decodeAudioData(request.response, function(buffer) {
-                soundBuffers[bufferKey] = buffer;
-                logLoad();
-            });
-        };
 
-        request.send();
+    //Loading from sources
+    function loadAllSources() {
+        function logLoad() {
+            soundsLoaded += 1;
+            if (soundsLoaded == Object.keys(soundSources).length)
+                finishedLoadingSound();
+        }
+
+        function finishedLoadingSound() {
+            callBack();
+        }
+
+        function loadSound(url, bufferKey) {
+            var request = new XMLHttpRequest();
+            request.open("GET", url, true);
+            request.responseType = "arraybuffer";
+
+            // Decode asynchronously
+            request.onload = function() {
+                context.decodeAudioData(request.response, function(buffer) {
+                    soundBuffers[bufferKey] = buffer;
+                    logLoad();
+                });
+            };
+
+            request.send();
+        }
+
+        for (var i in Object.keys(soundSources)) {
+            //read audio files into buffers
+            loadSound(
+                soundSources[Object.keys(soundSources)[i]],
+                Object.keys(soundSources)[i]
+            );
+        }
     }
-
-    for (var i in Object.keys(soundSources)) {
-        //read audio files into buffers
-        loadSound(
-            soundSources[Object.keys(soundSources)[i]],
-            Object.keys(soundSources)[i]
-        );
-    }
-
 
     return {
         playSound: (bufferKey, rate, loop) => {
-            //TODO rewrite with gain nodes and pitch nodes
-            
+                        
             if (!rate) rate = 1;
             var source = context.createBufferSource(); // creates a sound source
             source.buffer = soundBuffers[bufferKey]; // tell the source which sound to play
-            source.connect(gainNode); // connect the source to the context's destination (the speakers)
-            gainNode.connect(context.destination);
+            source.connect(volume); // connect the source to the context's destination (the speakers)
+            volume.connect(context.destination);
             source.playbackRate.value = rate;
 
             if (loop == true) {
@@ -70,11 +72,23 @@ export default function SoundManager(soundSources, callBack) {
             return source;
         },
 
+        playMusicTrack: (trackNum) => {
+
+        },
+
+        pauseMusic: () => {
+
+        },
+
+        playMusic: () => {
+
+        },
+
         muteToggle: () => {
-            if (gainNode.gain.value == 0)
-                gainNode.gain.value = 1;
+            if (volume.gain.value == 0)
+                volume.gain.value = 1;
             else 
-                gainNode.gain.value = 0;
+                volume.gain.value = 0;
         }
     };
 }
