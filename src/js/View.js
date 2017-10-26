@@ -101,7 +101,7 @@ export default function View() {
         if (boardLayer.children.length == 0)
             drawBoard(worldState);
 
-        if (worldState) {
+        // if (worldState) {
             //If there's a stat object, ie change in the world
             if (worldState.flags.BLOCK) {
                 blockLayer.activate();
@@ -191,7 +191,7 @@ export default function View() {
                     i++;
                 }
             }
-        }
+        // }
     };
 
     const drawBlockPreview = (args) => { // takes object with {block, position, and previewType}

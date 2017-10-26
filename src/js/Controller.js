@@ -21,10 +21,10 @@ export default function Controller(argOb) { //TODO clean up argument interface
 
             //Act on new state
             if (gameState == "paused") {
-                soundManager.toggleMute();
+                soundManager.stopMusic();
                 view.pauseScreen();
             } else {
-                soundManager.toggleMute();
+                soundManager.playTrack(0);
                 view.unPauseScreen();
             }
         }
@@ -45,7 +45,7 @@ export default function Controller(argOb) { //TODO clean up argument interface
 
             view.playScreen(world.tick(actionBuffer.bufferDump(), 0));
             
-            soundManager.playTrack(1);
+            soundManager.playTrack(0);
 
             gameState = "running"; //Feels weird this isn't a function TODO
         },
@@ -65,7 +65,8 @@ export default function Controller(argOb) { //TODO clean up argument interface
         keyDown: event => {
             if (event.key == "space") togglePause();
             else if (event.key == "m") soundManager.toggleMute();
-            else actionBuffer.keyIn(event.key);
+            else if (gameState == "running")
+                actionBuffer.keyIn(event.key);
         },
 
         tick: event => {
@@ -85,7 +86,7 @@ export default function Controller(argOb) { //TODO clean up argument interface
                         1 + worldState.flags.BLOCKHIT / 10
                     ); //increase pitch the higher the block lands
                 if (worldState.flags.ROWSDESTROYED)
-                    soundManager.playSound("destroy");
+                    soundManager.playSound("rowDestroyed");
                 if (worldState.flags.BLOCKSPAWNED)
                     soundManager.playSound("woosh", 2);
                 if (worldState.flags.LOSS) loseGame();

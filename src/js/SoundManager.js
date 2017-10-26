@@ -15,10 +15,9 @@ export default function SoundManager(soundSources, callBack) {
 
 
     //Create music path
-    let musicSource = context.createBufferSource();
-    musicSource.loop = true;
+    let musicSource = null;
+    let MUSIC_PLAYING = false;
     const musicGain = context.createGain();
-    musicSource.connect(musicGain);
     musicGain.connect(context.destination);
 
     //Create fx path
@@ -76,6 +75,8 @@ export default function SoundManager(soundSources, callBack) {
     }
 
     return {
+        //TODO Error handling for nonexistant sounds
+
         playSound: (key, rate=1) => {
             const fxSource = context.createBufferSource();
             fxSource.connect(fxGain);
@@ -87,22 +88,29 @@ export default function SoundManager(soundSources, callBack) {
         },
 
         playTrack: (trackNum, rate=1) => {
-            trackNum--; //Allow 1 indexed instead of 0 indexed, seems more natural
-            if (musicSource.buffer) //If the music is plugged in, stop 
+            if (trackNum < 0 || trackNum > musicBuffers.length-1){
+                console.log('trackNum', trackNum, 'out of range');
+            }
+
+            if (MUSIC_PLAYING) //If the music is plugged in, stop 
                 musicSource.stop();
-            console.log('tracknum', trackNum, "\nmusicBuffers[tracknum]:",musicBuffers[trackNum]);
+
+            let musicSource = context.createBufferSource();
+            musicSource.loop = true;
+            musicSource.connect(musicGain);
+
             musicSource.buffer = musicBuffers[trackNum]; // tell the source which sound to play
             musicSource.playbackRate.value = rate;
 
-            musicSource.start(0);
+            musicSource.start();
+            MUSIC_PLAYING = true;
         },
 
-        stopMusic: () => {
-            if (musicSource.buffer) //If the music is plugged in, stop             
+        stopMusic: () => { 
+            if (MUSIC_PLAYING){ //If the music is plugged in, stop             
                 musicSource.stop();
-        },
-
-        playMusic: () => {
+                MUSIC_PLAYING = false;
+            }
 
         },
 
