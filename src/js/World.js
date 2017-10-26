@@ -67,8 +67,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         DEBRISSPUN: false,
         BLOCKSPUN: false,
         BLOCKHIT: false,
-        DEBRIS: false,
-        BLOCK: false,
         LOSS: false
     };
 
@@ -114,7 +112,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         let rowsToDestroy = completedRows();
         if (rowsToDestroy.length > 0) {
             destroyRows(rowsToDestroy);
-            flags.DEBRIS = true;
         }
 
         for (let block of blocks) {
@@ -174,7 +171,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         let nextPos = wrapPos(addPoints(block.position(), block.momentum()));
 
         block.moveTo(nextPos);
-        flags.BLOCK = true; //Blocks need redraw
     };
 
     const makeDebrisFromBlock = function(block) {
@@ -190,8 +186,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         scorePoints(pointsForBlockLand);
 
         flags.BLOCKHIT = block.position().y + 1; //lets us vary playback rate of FX based on height of impact
-        flags.DEBRIS = true; //Debris needs redraw
-        flags.BLOCK = true; //need to remove dead blocks
     };
 
     const completedRows = function() {
@@ -327,8 +321,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
         spawnTick: () => {
             makeRandomBlock();
-
-            flags.BLOCK = true; //Blocks need redraw
             flags.BLOCKSPAWNED = true;
             spawnTimer = 0;
         },
@@ -346,11 +338,9 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                     block.moveTo(
                         wrapPos(addPoints(block.position(), [modDir, 0]))
                     ); //Move them in the same directions as we spin
-                    flags.BLOCK = true;
                 }
             }
 
-            flags.DEBRIS = true;
             flags.DEBRISSPUN = true;
         },
 
@@ -360,7 +350,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 let proposedBlock = block.rotatedClone(direction);
                 if (blockFitsIn(debrisField, proposedBlock)) {
                     block.rotate(direction);
-                    flags.BLOCK = true;
                     flags.BLOCKSPUN = true;
                 }
             }
@@ -400,15 +389,11 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             if (checkLoss()) flags.LOSS = true;
 
             if (!hasTicked) {
-                //draw debris on the very first tick to catch start state
-
-                worldActions.spawnTick(); //and spawns a block right away
+                //Spawn a block immediately, but just the first tick
+                worldActions.spawnTick();
                 hasTicked = true;
-                flags.DEBRIS = true;
             }
 
-            // //TODO cleanup, right now just forces constant redraw of debris
-            // flags.DEBRIS = true;
 
             return {
                 //return world object to be passed to view for drawing
