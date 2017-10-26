@@ -123,6 +123,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         }
 
         for (let block of blocks) {
+            if (canFly(block)) flyBlock(block);
             if (canDrop(block)) dropBlock(block);
             else if (flags.DEBRISSPUN == false) //lets player slide a little before block sticks
                 makeDebrisFromBlock(block);
@@ -141,9 +142,29 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         deadBlocks = [];
     };
 
-    const canDrop = function(block) {
+    // TODO more elegant combination of fly and drop:
+    const canFly = (block) => {
+        //Maybe deprecate for blockFitsIn(debrisField)? TODO        
+        let nextPos = addPoints(block.position(), [block.momentum().x,0]);
+
+        for (let piece of block.shape()) {
+            let piecePos = addPoints(nextPos, piece);
+
+            piecePos = wrapPos(piecePos);
+            // console.log('live blocks', blocks)
+            if (debrisField[piecePos.x][piecePos.y] || piecePos.y < 0){
+                // console.log('canDrop failure by blockID:',block)
+                return false;
+            }
+
+        }
+
+        return true;
+    };
+
+    const canDrop = (block) => {
         //Maybe deprecate for blockFitsIn(debrisField)? TODO
-        let nextPos = addPoints(block.position(), block.momentum());
+        let nextPos = addPoints(block.position(), [0,block.momentum().y]);
 
         for (let piece of block.shape()) {
             let piecePos = addPoints(nextPos, piece);
@@ -173,10 +194,17 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         return true;
     };
 
+    const flyBlock = function(block) {
+        //For horizontal movement of blocks
+        let nextPos = wrapPos(addPoints(block.position(), [block.momentum().x,0]));
+
+        block.moveTo(nextPos);
+    };
+
     const dropBlock = function(block) {
         //after hit test actually drop the block
 
-        let nextPos = wrapPos(addPoints(block.position(), block.momentum()));
+        let nextPos = wrapPos(addPoints(block.position(), [0,block.momentum().y]));
 
         block.moveTo(nextPos);
     };

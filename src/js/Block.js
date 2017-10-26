@@ -24,7 +24,7 @@ export function Block(shape, behaviorList) {
 
     let position = null;
 
-    const momentum = [0, -1];
+    const momentum = {x:0, y:-1};
     const id = nextBlockId();
     const baseShape = shape; // deprecated
     const thisBlocksShape = shapeCopy(shape);
@@ -165,7 +165,7 @@ export const BlockBehaviors = {
         const position = argOb.position;
 
         if (position && position.y < worldState.lossHeight)
-            momentum[0] = id%2 ? -1 : 1;
+            momentum.x = id%2 ? -1 : 1;
     },
 
     glow: (argOb) => {
