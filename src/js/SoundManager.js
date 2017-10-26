@@ -95,7 +95,7 @@ export default function SoundManager(soundSources, callBack) {
             if (MUSIC_PLAYING) //If the music is plugged in, stop 
                 musicSource.stop();
 
-            let musicSource = context.createBufferSource();
+            musicSource = context.createBufferSource();
             musicSource.loop = true;
             musicSource.connect(musicGain);
 
