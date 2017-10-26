@@ -32,10 +32,6 @@ export default function View() {
     let worldCore = null;
     const allRings = []; //list of each paper.Path.RegularPolygon that form the worlds rings
 
-    //Game Block objects TODO Deprecate these in favor of layers for all tasks
-    const blockReps = []; //Lists to collect our paper items for easy removal later
-    const debrisReps = [];
-
     const worldColors = {
         //This should be read from a file or passed TODO
         coreFill: "white", //Also clean up styles to produce no borders but also no coreners TODO
@@ -101,97 +97,79 @@ export default function View() {
         if (boardLayer.children.length == 0)
             drawBoard(worldState);
 
-        // if (worldState) {
-            //If there's a stat object, ie change in the world
-            if (worldState.flags.BLOCK) {
-                blockLayer.activate();
+        //If there's a stat object, ie change in the world
+        // if (worldState.flags.BLOCK) {
+        blockLayer.activate();
+        blockLayer.removeChildren();
 
-                
+        for (let block of worldState.blocks) {
 
-                while (blockReps.length > 0) {
-                    //Remove all block drawings
-                    blockReps.pop().remove();
-                }
+            //Set drawing style for block
+            const blockStyle = block.style;
 
-                for (let block of worldState.blocks) {
+            for (let piece of block.shape()) {
+                let piecePos = addPoints(block.position(), piece);
 
-                    //Set drawing style for block
-                    const blockStyle = block.style;
+                piecePos = worldState.wrapPos(piecePos); //Make sure position is in coordinate system.
 
-                    for (let piece of block.shape()) {
-                        let piecePos = addPoints(block.position(), piece);
+                const newBlockRep = drawAtPos(
+                    piecePos,
+                    blockStyle,
+                    worldState
+                );
+            }
+        }
 
-                        piecePos = worldState.wrapPos(piecePos); //Make sure position is in coordinate system.
+        debrisLayer.activate();
+        debrisLayer.removeChildren();
 
-                        const newBlockRep = drawAtPos(
-                            piecePos,
-                            blockStyle,
-                            worldState
-                        );
-                        blockReps.push(newBlockRep); //add to list to remove later
-                    }
+        const debrisStyle = {
+            fillColor: worldColors.debrisFill,
+            strokeColor: worldColors.debrisStroke,
+            strokeWidth: worldColors.debrisStrokeWidth
+        };
+
+        //Draw new debris:
+        for (let dX = 0; dX < worldState.x; dX++) {
+            for (let dY = 0; dY < worldState.y; dY++) {
+                if (worldState.debris[dX][dY]) {
+                    const newDebrisRep = drawAtPos(
+                        { x: dX, y: dY },
+                        debrisStyle,
+                        worldState
+                    );
                 }
             }
+        }
 
-            if (worldState.flags.DEBRIS) {
-                debrisLayer.activate();
 
-                const debrisStyle = {
-                    fillColor: worldColors.debrisFill,
-                    strokeColor: worldColors.debrisStroke,
-                    strokeWidth: worldColors.debrisStrokeWidth
-                };
+        //Draw block previews:
 
-                while (
-                    debrisReps.length > 0 //Remove all block drawings
-                )
-                    debrisReps.pop().remove();
+        const rootPos = new paper.Point(50,50);
 
-                //Draw new debris:
-                for (let dX = 0; dX < worldState.x; dX++) {
-                    for (let dY = 0; dY < worldState.y; dY++) {
-                        if (worldState.debris[dX][dY]) {
-                            const newDebrisRep = drawAtPos(
-                                { x: dX, y: dY },
-                                debrisStyle,
-                                worldState
-                            );
-                            debrisReps.push(newDebrisRep); //add to list to remove later
-                        }
-                    }
-                }
+        if (worldState.flags.BLOCKSPAWNED){
+            blockPreviewLayer.activate();
+            blockPreviewLayer.removeChildren();
+
+            if (worldState.newBlocks.length > 0) {
+                drawBlockPreview({
+                    block: worldState.newBlocks[0],
+                    previewType: 'CURRENT',
+                    position: rootPos
+                });
             }
-
-
-
-            //Draw block previews:
-
-            const rootPos = new paper.Point(50,50);
-
-            if (worldState.flags.BLOCKSPAWNED){
-                blockPreviewLayer.activate();
-                blockPreviewLayer.removeChildren();
-
-                if (worldState.newBlocks.length > 0) {
-                    drawBlockPreview({
-                        block: worldState.newBlocks[0],
-                        previewType: 'CURRENT',
-                        position: rootPos
-                    });
-                }
-                
-                // This should draw on preview for each block in queue
-                let i = 1;
-                for (let block of worldState.blockQueue.contents){
-                    drawBlockPreview({
-                        previewType: 'FUTURE',
-                        block: block,
-                        position: addPoints(rootPos, [0, 70*i])
-                    })
-                    i++;
-                }
+            
+            // This should draw on preview for each block in queue
+            let i = 1;
+            for (let block of worldState.blockQueue.contents){
+                drawBlockPreview({
+                    previewType: 'FUTURE',
+                    block: block,
+                    position: addPoints(rootPos, [0, 70*i])
+                })
+                i++;
             }
-        // }
+        }
     };
 
     const drawBlockPreview = (args) => { // takes object with {block, position, and previewType}
