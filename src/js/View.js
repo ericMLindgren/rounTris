@@ -144,45 +144,46 @@ export default function View() {
 
 
         //Draw block previews:
+        blockPreviewLayer.activate();
+        blockPreviewLayer.removeChildren();
 
         const rootPos = new paper.Point(50,50);
 
-        if (worldState.flags.BLOCKSPAWNED){
-            blockPreviewLayer.activate();
-            blockPreviewLayer.removeChildren();
-
-            if (worldState.newBlocks.length > 0) {
-                drawBlockPreview({
-                    block: worldState.newBlocks[0],
-                    previewType: 'CURRENT',
-                    position: rootPos
-                });
-            }
-            
-            // This should draw on preview for each block in queue
-            let i = 1;
-            for (let block of worldState.blockQueue.contents){
-                drawBlockPreview({
-                    previewType: 'FUTURE',
-                    block: block,
-                    position: addPoints(rootPos, [0, 70*i])
-                })
-                i++;
-            }
+        let i = 0;
+        //draw colored preview for each block in the world:
+        for (let block of worldState.blocks) {
+            drawBlockPreview({
+                block: block,
+                previewType: 'CURRENT',
+                position: addPoints(rootPos, [0, 100*i])
+            });
+            i++;                
+        }
+        
+        // This should draw on preview for each block in queue:
+        for (let block of worldState.blockQueue.contents){
+            if (i > worldState.blockQueue.contents.length) // never draw more previews (including current) than the queue length
+                break;
+            drawBlockPreview({
+                previewType: 'FUTURE',
+                block: block,
+                position: addPoints(rootPos, [0, 100*i])
+            })
+            i++;
         }
     };
 
     const drawBlockPreview = (args) => { // takes object with {block, position, and previewType}
-        // console.log("drawBlockPreview", args)
-        const pieceSize = 20;
+        // TODO abstract color decisions
+        const pieceSize = 30;
         const bubbleColorCurrent = new paper.Color(1, .9, .9);
         const bubbleColorFuture = new paper.Color(1);
 
-        let bgColor;
+        let bubbleBgColor;
         if (args.previewType == 'FUTURE')
-            bgColor = bubbleColorFuture;
+            bubbleBgColor = bubbleColorFuture;
         else
-            bgColor = bubbleColorCurrent
+            bubbleBgColor = bubbleColorCurrent
 
         //makes individual pieces
         const smallSquare = (position) => {
@@ -190,8 +191,9 @@ export default function View() {
             return paper.Path.Rectangle({
                 point: position,
                 size: [pieceSize, pieceSize],
-                fillColor: "black",
-                strokeColor: bgColor
+                fillColor: args.block.repStyle.fillColor, //args.block.style.fillColor,
+                opacity: args.block.repStyle.opacity,
+                strokeColor: bubbleBgColor
             });
         };
 
@@ -212,7 +214,7 @@ export default function View() {
             center: args.position,
             radius: pieceSize * 3,
             sides: 6,
-            fillColor: bgColor,
+            fillColor: bubbleBgColor,
             strokeColor: "black"
         });
 

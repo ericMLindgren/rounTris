@@ -12,14 +12,15 @@ const shapeCopy = baseShape => {
     return newShape;
 };
 
-let blocksMade = 0;
+// let blocksMade = 0;
 function nextBlockId() {
-    blocksMade++;
-    return blocksMade;
+    // blocksMade++;
+    return getRandomInt(0,10000);
 }
 
-export default function Block(shape) {
-    //{position:,shape:,momentum:}
+export function Block(shape, behaviorList) {
+
+    const behaviors = behaviorList ? behaviorList : [];
 
     let position = null;
 
@@ -28,10 +29,15 @@ export default function Block(shape) {
     const baseShape = shape; // deprecated
     const thisBlocksShape = shapeCopy(shape);
 
-    //TODO put appearance details in here so that view can draw unique shapes
+    //TODO generalize appearance details
     const style = {
         fillColor: {red:.5, green:.5, blue:.6},
         // opacity: 1,
+    }
+
+    //This style is used by blockPreviews for mini-block appearance 
+    const repStyle = {
+        fillColor: 'black'
     }
 
     const rotate = (direction) => {
@@ -89,7 +95,6 @@ export default function Block(shape) {
                 }
             }
 
-            blocksMade--; //Don't increment total block count for these hypothetical blocks
             const retBlock = new Block(newShape);
             retBlock.moveTo(position);
             return retBlock;
@@ -105,16 +110,84 @@ export default function Block(shape) {
         },
 
         style: style,
+        repStyle: repStyle,
 
-        tick: (event) => {
-            // const redMod = getRandomInt(0,2) ? -.1 : .1;
-            // const greenMod = getRandomInt(0,2) ? -.1 : .1;
-            // const blueMod = getRandomInt(0,2) ? -.1 : .1;
+        tick: (event, worldState) => {
+            for (let behavior of behaviors){
+                behavior({
+                    event: event,
+                    worldState: worldState,
+                    style: style,
+                    repStyle: repStyle,
+                    shape: thisBlocksShape,
+                    momentum: momentum,
+                    position: position,
+                    id: id
+                });
+            }
+        },  
 
-            // style.fillColor.red += redMod;
-            // style.fillColor.green += greenMod;
-            style.opacity = 1 - (Math.sin(event.time*7.5) + 1)*.1;
-            // console.log('Blue:', style.fillColor.blue);
-        },
+        addBehavior: (newBehaviors) => {
+            if (!(newBehaviors instanceof Array)){
+                behaviors.push(newBehaviors);
+                return;
+            }
+
+            for (let newBehavior of newBehaviors){
+                behaviors.push(newBehavior);
+            }
+        }   
     };
+}
+
+// Behavior:
+export const BlockBehaviors = {
+    chameleon: (argOb) => {
+        const style = argOb.style;
+        const repStyle = argOb.repStyle;
+        const event = argOb.event;
+        const range = .25;
+
+        const newFill = {
+            red: (Math.sin(event.time*7) + 1)*range,
+            green: (Math.sin(event.time*5) + 1)*range,
+            blue: (Math.sin(event.time*3) + 1)*range,
+        }
+
+        style.fillColor = newFill;
+        repStyle.fillColor = newFill;
+    },
+
+    dropzig: (argOb) => {
+        const worldState = argOb.worldState;
+        const momentum = argOb.momentum;
+        const id = argOb.id;
+        const position = argOb.position;
+
+        if (position && position.y < worldState.lossHeight)
+            momentum[0] = id%2 ? -1 : 1;
+    },
+
+    glow: (argOb) => {
+        const event = argOb.event;
+        const style = argOb.style;
+        const repStyle = argOb.repStyle;
+
+        const newOpacity = 1 - (Math.sin(event.time*7.5) + 1)*.08;
+
+        style.opacity = newOpacity;
+        repStyle.opacity = newOpacity;
+    },
+
+    phase: (argOb) => {
+        const event = argOb.event;
+        const style = argOb.style;
+        const repStyle = argOb.repStyle;
+        const id = argOb.id; // used as seed to diversify phasing
+
+        const newOpacity = (Math.sin(event.time*3+(id)) + 1)*.5;
+
+        style.opacity = newOpacity;
+        repStyle.opacity = newOpacity;
+    }
 }

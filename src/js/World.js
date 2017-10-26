@@ -1,6 +1,7 @@
 //World class for rounTris.js
 
-import Block from "./Block";
+import { Block, BlockBehaviors } from "./Block";
+
 import { addPoints, subPoints, pointify, getRandomInt, arraysEqual } from "./PointHelpers";
 
 const BLOCKSHAPES = [
@@ -11,33 +12,43 @@ const BLOCKSHAPES = [
     [[-1, 0], [0, 0], [-1, 1], [0, 1]] // O
 ];
 
-const BlockShapeQueue = (args) => {
-    // Arguments
 
-    let maxLength = args.length;
-    const shapes = args.shapes;
+const makeRandomBlock = () => {
+    let randomShape = BLOCKSHAPES[getRandomInt(0, BLOCKSHAPES.length)];
+    let newBlock = new Block(randomShape);
+
+    const coin = getRandomInt(0,2);
+    if (coin%2)
+        newBlock.addBehavior([BlockBehaviors.chameleon, BlockBehaviors.dropzig]);
+    else
+        newBlock.addBehavior([BlockBehaviors.glow]);
+    newBlock.randomize();
+    return newBlock;
+}
+
+const blocksHaveSameBaseShape = (b1, b2) => {
+    if (arraysEqual(b1.baseShape(), b2.baseShape()))
+        return true;
+    return false;
+}
+
+const BlockGenQueue = (maxLength) => {
     //Should mantain a queue of blocks, enforcing repetition rules,
     let blockList = [];
 
     const fillQueue = () => {
         // while queue length is less then queue length
         while (blockList.length < maxLength){
-            // grab a random shape
-            let randomShape = shapes[getRandomInt(0, shapes.length)];
+            let newBlock = makeRandomBlock();
 
-            while (blockList.length > 0 && arraysEqual(randomShape, blockList[blockList.length-1].baseShape())){
-                // if thats the same as the last block, get another random shape
-                randomShape = shapes[getRandomInt(0, shapes.length)];
+            // if thats the same as the last block, make another randomBlock
+            while (blockList.length > 0 && blocksHaveSameBaseShape(newBlock, blockList[blockList.length-1])){
+                newBlock = makeRandomBlock();
             }
-
-            //make block with new shape and make sure its randomly flipped and spun
-            // ((shape, array) => {
-                let newBlock = new Block(randomShape);
-                newBlock.randomize();
-                blockList.push(newBlock);
-            // })(randomShape, blockList)
+            blockList.push(newBlock);
         }
     }
+
     fillQueue(); // populate queue initially
 
     return {
@@ -73,10 +84,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
     let ALERTS = [];
     let NEW_BLOCKS = [];
 
-    const blockQueue = new BlockShapeQueue({
-        length: 3,
-        shapes: BLOCKSHAPES
-    });
+    const blockQueue = new BlockGenQueue(2);
 
     let inMeteorShower = false;
     let meteorCap = 10;
@@ -275,10 +283,9 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         return startPos;
     };
 
-    const makeRandomBlock = () => {
+    const putQueueBlockIntoWorld = () => {
         
         let newBlock = blockQueue.getNext();
-            
         newBlock.moveTo(randomDropCoord());
         
         blocks.push(newBlock);
@@ -320,7 +327,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         },
 
         spawnTick: () => {
-            makeRandomBlock();
+            putQueueBlockIntoWorld();
             flags.BLOCKSPAWNED = true;
             spawnTimer = 0;
         },
@@ -396,10 +403,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 hasTicked = true;
             }
 
-            for (let block of blocks)
-                block.tick(event)
-
-            return {
+            const worldState = {
                 //return world object to be passed to view for drawing
                 x: worldWidth,
                 y: worldHeight,
@@ -414,6 +418,16 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 newBlocks: NEW_BLOCKS,
                 blockQueue: blockQueue
             };
+
+            // Let world blocks express behaviors
+            for (let block of blocks)
+                block.tick(event, worldState);
+
+            // Let preview blocks express behaviors
+            for (let block of blockQueue.contents)
+                block.tick(event, worldState);
+
+            return worldState
         },
 
         getDebris: () => {
