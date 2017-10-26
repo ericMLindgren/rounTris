@@ -359,11 +359,12 @@ export default function World(worldWidth, worldHeight, lossHeight) {
     //Return interface object:
     let hasTicked = false;
     return {
-        tick: (actionList, delta) => {
+        tick: (actionList, event) => {
             //Reset trackers
             scoreMultiplier = 1;
             ALERTS = [];
             NEW_BLOCKS = [];
+            const delta = event.delta
 
             for (let flag in flags) {
                 if (flag != 'DEBRISSPUN')
@@ -391,11 +392,12 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             if (!hasTicked) {
                 //Spawn a block immediately, but just the first tick
                 worldActions.spawnTick();
+                dropTick();
                 hasTicked = true;
             }
 
             for (let block of blocks)
-                block.tick()
+                block.tick(event)
 
             return {
                 //return world object to be passed to view for drawing

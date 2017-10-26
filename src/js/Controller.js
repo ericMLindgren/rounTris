@@ -69,11 +69,11 @@ export default function Controller(argOb) { //TODO clean up argument interface
                 actionBuffer.keyIn(event.key);
         },
 
-        tick: event => {
+        tick: (event) => {
             if (gameState == "running") {
                 const worldState = world.tick(
                     actionBuffer.bufferDump(),
-                    event.delta
+                    event
                 );
                 view.tick(worldState, event);
 

@@ -107,13 +107,14 @@ export default function Block(shape) {
         style: style,
 
         tick: (event) => {
-            const redMod = getRandomInt(0,2) ? -.1 : .1;
-            const greenMod = getRandomInt(0,2) ? -.1 : .1;
-            const blueMod = getRandomInt(0,2) ? -.1 : .1;
+            // const redMod = getRandomInt(0,2) ? -.1 : .1;
+            // const greenMod = getRandomInt(0,2) ? -.1 : .1;
+            // const blueMod = getRandomInt(0,2) ? -.1 : .1;
 
-            style.fillColor.red += redMod;
-            style.fillColor.green += greenMod;
-            style.fillColor.blue += blueMod;
+            // style.fillColor.red += redMod;
+            // style.fillColor.green += greenMod;
+            style.opacity = 1 - (Math.sin(event.time*7.5) + 1)*.1;
+            // console.log('Blue:', style.fillColor.blue);
         },
     };
 }
