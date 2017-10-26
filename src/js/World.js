@@ -84,7 +84,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
     let ALERTS = [];
     let NEW_BLOCKS = [];
 
-    const blockQueue = new BlockGenQueue(2);
+    const blockQueue = new BlockGenQueue(3);
 
     let inMeteorShower = false;
     let meteorCap = 10;

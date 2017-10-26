@@ -162,7 +162,7 @@ export default function View() {
         
         // This should draw on preview for each block in queue:
         for (let block of worldState.blockQueue.contents){
-            if (i > worldState.blockQueue.contents.length) // never draw more previews (including current) than the queue length
+            if (i > worldState.blockQueue.contents.length-1) // never draw more previews (including current) than the queue length
                 break;
             drawBlockPreview({
                 previewType: 'FUTURE',
