@@ -394,6 +394,8 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 hasTicked = true;
             }
 
+            for (let block of blocks)
+                block.tick()
 
             return {
                 //return world object to be passed to view for drawing

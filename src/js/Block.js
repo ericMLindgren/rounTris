@@ -105,5 +105,15 @@ export default function Block(shape) {
         },
 
         style: style,
+
+        tick: (event) => {
+            const redMod = getRandomInt(0,2) ? -.1 : .1;
+            const greenMod = getRandomInt(0,2) ? -.1 : .1;
+            const blueMod = getRandomInt(0,2) ? -.1 : .1;
+
+            style.fillColor.red += redMod;
+            style.fillColor.green += greenMod;
+            style.fillColor.blue += blueMod;
+        },
     };
 }
