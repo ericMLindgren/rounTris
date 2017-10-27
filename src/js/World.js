@@ -19,7 +19,7 @@ const makeRandomBlock = () => {
 
     const coin = getRandomInt(0,10);
     if (coin%5==0)
-        newBlock.addBehavior([BlockBehaviors.chameleon, BlockBehaviors.dropzig]);
+        newBlock.addBehavior([BlockBehaviors.chameleon, BlockBehaviors.phase]);
     else
         newBlock.addBehavior([BlockBehaviors.glow]);
     newBlock.randomize();
@@ -300,7 +300,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
     const scorePoints = amount => {
         if (scoreMultiplier > 1) {
-            ALERTS.push({ message: "BONUS!!!", type: "reward" });
+            ALERTS.push({ message: "BONUS!!!", type: "BONUS" });
         }
         score += amount * scoreMultiplier;
     };
@@ -401,6 +401,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             NEW_BLOCKS = [];
             const delta = event.delta
 
+
             for (let flag in flags) {
                 if (flag != 'DEBRISSPUN')
                     flags[flag] = false;
@@ -430,6 +431,9 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 dropTick();
                 hasTicked = true;
             }
+
+            if (flags.DEBRISSPUN)
+                ALERTS.push({ message: "BONUS!!!", type: "BONUS" });
 
             const worldState = {
                 //return world object to be passed to view for drawing

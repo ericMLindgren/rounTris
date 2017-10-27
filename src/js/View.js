@@ -409,6 +409,30 @@ export default function View() {
         }
     };
 
+    //TODO fix Color for alert type
+    //extract animation behaviors to separate functions...
+    const spawnAlerts = (worldState) => {
+        for (let alert of worldState.alerts){
+            let thisAlert = textButton({
+                content: alert.message,
+                position: paper.view.center,
+                size: 25,
+                callback: null
+            });
+
+            ongoingAnimations.push(new ViewAnimation({
+                duration: 1,
+                callback: (event) => {thisAlert.remove()},
+                action: (event) => {
+                    thisAlert.fillColor = 'red';
+                    // thisAlert.fontSize = 25 + (Math.sin(event.time * 7.5) + 1) * 5;
+                    thisAlert.applyMatrix = false;
+                    thisAlert.scale(1.03)
+                },
+            }))
+        }
+    }
+
     loadScreen();
 
     return {
@@ -416,8 +440,7 @@ export default function View() {
             if (worldState) {
                 updateBoard(worldState);
                 drawHUD(worldState);
-                for (alert of worldState.alerts)
-                    spawnAlerts
+                spawnAlerts(worldState);
             }
             animationTick(event);
         },
