@@ -7,6 +7,7 @@ import ActionBuffer from "./ActionBuffer";
 
 export default function Controller(argOb) { //TODO clean up argument interface
     //Controller is initialized with dimensions of the world
+
     let views = argOb.views;
 
     let worlds = [];
@@ -19,7 +20,7 @@ export default function Controller(argOb) { //TODO clean up argument interface
     if (views.length> argOb.keyLayouts.length)
         throw 'ERROR: not enough key configurations for number of views';
 
-    for (let layout in argOb.keyLayouts){
+    for (let layout of argOb.keyLayouts){
         actionBuffers.push(new ActionBuffer(layout));
     }
 
@@ -73,7 +74,6 @@ export default function Controller(argOb) { //TODO clean up argument interface
         // Called by soundmanager after load, puts startscreen on each view
         doneLoading: () => {
             for (let view of views){
-                console.log('<CONTROLLER> telling view', view.idNum, 'to startScreen()')
                 view.startScreen()
             }
         },
@@ -83,12 +83,11 @@ export default function Controller(argOb) { //TODO clean up argument interface
         },
 
         keyDown: event => {
-            // THIS DOESNT WORK AS ONLY ONE VIEW HAS FOCUS, NEED TO FIGURE OUT 
-            // ACTION PARSING
-            if (event.key == "space") togglePause();
-            else if (event.key == "m") soundManager.toggleMute();
+            if (event.code == "Space") togglePause();
+            else if (event.code == "KeyM") soundManager.toggleMute();
             else if (gameState == "running")
-                actionBuffers[0].keyIn(event.key);
+                for (let actionBuffer of actionBuffers) //TODO too brute force, clean
+                    actionBuffer.keyIn(event.code);
         },
 
         tick: (event) => {
@@ -97,7 +96,9 @@ export default function Controller(argOb) { //TODO clean up argument interface
                 const world = worlds[i];
                 const actionBuffer = actionBuffers[i];
 
+
                 if (gameState == "running") {
+                    
                     const worldState = world.tick(
                         actionBuffer.bufferDump(),
                         event

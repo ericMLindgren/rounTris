@@ -23,11 +23,13 @@ export default function ActionBuffer(keyDict) {
         bufferDump: () => {
             let retBuf = buffer.slice(); //Copy internal buffer
             buffer.splice(0, buffer.length); //Clear internal buffer
+            // if (retBuf.length>0)
+                // console.log('<ACTIONBUFFER> dumping:', retBuf)
             return retBuf; //return copy
         },
 
         keyIn: input => {
-            // console.log('checking for key: ' + input);
+            // console.log('<ACTIONBUFFER> checking for key: ' + input + ' in dict:', keyDict);
             for (let key in keyDict) {
                 if (key === input) {
                     buffer.push(keyDict[key]);

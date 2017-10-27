@@ -37,9 +37,10 @@ const ViewAnimation = function(argOb) {
 export default function View(canvas) {
 
     canvas = document.getElementById(canvas);
+    const scope = new paper.PaperScope();
 
-    const thisScope = paper.setup(canvas);
-    console.log('scope ob', thisScope)
+    paper.setup(canvas);
+    // console.log('scope ob', thisScope)
     paper.view.draw();
 
     console.log(paper)
@@ -364,9 +365,10 @@ export default function View(canvas) {
     };
 
     const startScreen = () => {
-        console.log('<VIEW ' + idNum + '> startScreen()')
+        // TODO centralize this.
+        paper = scope;
         clearAllLayers();
-        let content = idNum == 0 ? "PLAYER 1 READY" : "PLAYER 2 READY";
+        let content = 'PLAYER ' + parseInt(idNum+1) + ' READY';
         const beginButton = textButton({
             content: content,
             position: paper.view.center,
@@ -478,13 +480,16 @@ export default function View(canvas) {
     return {
         tick: (worldState, event) => {
             // console.log('<VIEW', idNum+'> controller ticked me')
-            paper = thisScope;
+            // paper.setup(canvas);
+            paper = scope;
+            scope.activate();
             if (worldState) {
                 updateBoard(worldState);
                 drawHUD(worldState);
                 spawnAlerts(worldState);
             }
             animationTick(event);
+            // paper.draw();
         },
 
         clearScreen: () => {
@@ -540,12 +545,8 @@ export default function View(canvas) {
 
         setController: newController => {
             controller = newController;
-            // paper.view.onKeyDown = controller.keyDown;
-            paper.view.onKeyDown = (event) => {
-                console.log(event.key,'pressed in view:',idNum);
-            }
             console.log('View', idNum, 'set controller to', controller)
-            paper.view.onFrame = controller.tick
+            paper.view.onFrame = controller.tick // move this to vanilla implementation in controller or app
         },
 
         idNum: idNum

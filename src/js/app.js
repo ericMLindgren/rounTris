@@ -29,13 +29,14 @@ const soundSources = {
 // true argument designates one view as the canvas who's redraw
 // triggers the controllers tick, which then propagates
 
-const views = [new View('canvas'), new View('canvas2')];
+const views = [new View('canvas1'), new View('canvas2')];
 
 const controller = new Controller({
     views: views,
     keyLayouts: keyLayouts,
     worldDimensions:[20, 15, 9]
 });
+document.addEventListener("keydown", controller.keyDown) // Make sure controller gets att key presses
 
 // TODO would like to handle this in controller but lack of 'this' object is confusing
 for (let view of views){

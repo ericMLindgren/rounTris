@@ -13,7 +13,7 @@ const shapeCopy = baseShape => {
 };
 
 // let blocksMade = 0;
-function nextBlockId() {
+function getIdNum() {
     // blocksMade++;
     return getRandomInt(0,10000);
 }
@@ -25,7 +25,7 @@ export function Block(shape, behaviorList) {
     let position = null;
 
     const momentum = {x:0, y:-1};
-    const id = nextBlockId();
+    const id = getIdNum();
     const baseShape = shape; // deprecated
     const thisBlocksShape = shapeCopy(shape);
 
