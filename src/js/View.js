@@ -11,6 +11,28 @@ paper.setup(canvas);
 
 paper.view.draw();
 
+// ViewAnimation class, if called without duration, lasts forever.
+const ViewAnimation = function(argOb) {
+    this.action = argOb.action;
+    this.callback = argOb.callback;
+    this.duration = argOb.duration;
+    this.age = 0
+
+    this.isExpired = () => {
+        if (this.duration==undefined)
+            return false;
+        return this.age>this.duration;
+    };
+
+
+    this.tick = argOb.action
+    // this.tick = (event)=>{
+    //     this.action(event);
+    //     console.log('ViewAnimation object ticked');
+    // }
+
+}
+
 export default function View() {
     let controller = null; //Pointer to the controller so we can pass view events
 
@@ -19,7 +41,7 @@ export default function View() {
 
     let loadingLogo = null;
 
-    const passiveAnimationList = {};
+    const ongoingAnimations = [];
 
     const boardLayer = new paper.Layer(),
         blockLayer = new paper.Layer(),
@@ -86,10 +108,22 @@ export default function View() {
             worldColors.lossStrokeWidth;
 
         //Create a passive animation for pulsating barrier
-        passiveAnimationList["lossHeightPulse"] = event => {
-            allRings[worldState.lossHeight].strokeWidth =
-                Math.sin(event.time * 7.5) * 0.5 + 1;
-        };
+        ongoingAnimations.push(new ViewAnimation({
+            action: (event) => {
+                allRings[worldState.lossHeight].strokeWidth = Math.sin(event.time * 7.5) + 1;
+            },
+            callback: () => {
+                ongoingAnimations.push(new ViewAnimation({
+                    action: (event) => {
+                        allRings[worldState.lossHeight].strokeWidth = Math.sin(event.time * 7.5) * .5 + 1;          
+                    },
+                    callback: null,
+                    duration: null,
+                }))
+            },
+            duration: 1
+        }));
+        
     };
 
     const updateBoard = worldState => {
@@ -363,9 +397,15 @@ export default function View() {
         });
     };
 
-    const passiveAnimations = event => {
-        for (let key in passiveAnimationList) {
-            passiveAnimationList[key](event);
+    const animationTick = (event) => {
+        for (let i = ongoingAnimations.length-1; i > -1; i--) {
+            const anim = ongoingAnimations[i];
+            anim.tick(event);
+            anim.age += event.delta;
+            if (anim.isExpired()){
+                anim.callback();
+                ongoingAnimations.splice(i,1)
+            }
         }
     };
 
@@ -376,8 +416,10 @@ export default function View() {
             if (worldState) {
                 updateBoard(worldState);
                 drawHUD(worldState);
+                for (alert of worldState.alerts)
+                    spawnAlerts
             }
-            passiveAnimations(event);
+            animationTick(event);
         },
 
         clearScreen: () => {

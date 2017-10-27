@@ -17,8 +17,8 @@ const makeRandomBlock = () => {
     let randomShape = BLOCKSHAPES[getRandomInt(0, BLOCKSHAPES.length)];
     let newBlock = new Block(randomShape);
 
-    const coin = getRandomInt(0,2);
-    if (coin%2)
+    const coin = getRandomInt(0,10);
+    if (coin%5==0)
         newBlock.addBehavior([BlockBehaviors.chameleon, BlockBehaviors.dropzig]);
     else
         newBlock.addBehavior([BlockBehaviors.glow]);
