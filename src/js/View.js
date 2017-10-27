@@ -5,13 +5,19 @@ import { addPoints, subPoints, pointify } from "./PointHelpers";
 
 //Handles drawing game World, hud, as well as start and end screens...
 
-const canvas = document.getElementById("canvas");
+// const canvas = document.getElementById("canvas1");
 
-paper.setup(canvas);
+// paper.setup(canvas);
 
-paper.view.draw();
+// paper.view.draw();
 
-// ViewAnimation class, if called without duration, lasts forever.
+let viewsMade = -1;
+function getIdNum() {
+    viewsMade++;
+    return viewsMade;
+}
+
+// ViewAnimation class, if called without duration lasts forever.
 const ViewAnimation = function(argOb) {
     this.action = argOb.action;
     this.callback = argOb.callback;
@@ -26,14 +32,19 @@ const ViewAnimation = function(argOb) {
 
 
     this.tick = argOb.action
-    // this.tick = (event)=>{
-    //     this.action(event);
-    //     console.log('ViewAnimation object ticked');
-    // }
-
 }
 
-export default function View() {
+export default function View(canvas) {
+
+    canvas = document.getElementById(canvas);
+
+    const thisScope = paper.setup(canvas);
+    console.log('scope ob', thisScope)
+    paper.view.draw();
+
+    console.log(paper)
+
+    const idNum = getIdNum();
     let controller = null; //Pointer to the controller so we can pass view events
 
     let spinFlag = false; //Flags to flip if world changes so we know it needs redrawing
@@ -353,9 +364,11 @@ export default function View() {
     };
 
     const startScreen = () => {
+        console.log('<VIEW ' + idNum + '> startScreen()')
         clearAllLayers();
+        let content = idNum == 0 ? "PLAYER 1 READY" : "PLAYER 2 READY";
         const beginButton = textButton({
-            content: "BEGIN",
+            content: content,
             position: paper.view.center,
             size: 50,
             callback: controller.startGame
@@ -399,6 +412,8 @@ export default function View() {
     };
 
     const animationTick = (event) => {
+        if (loadingLogo) loadingLogo.rotate(1);
+
         for (let i = ongoingAnimations.length-1; i > -1; i--) {
             const anim = ongoingAnimations[i];
             anim.tick(event);
@@ -462,6 +477,8 @@ export default function View() {
 
     return {
         tick: (worldState, event) => {
+            // console.log('<VIEW', idNum+'> controller ticked me')
+            paper = thisScope;
             if (worldState) {
                 updateBoard(worldState);
                 drawHUD(worldState);
@@ -523,12 +540,14 @@ export default function View() {
 
         setController: newController => {
             controller = newController;
-            paper.view.onKeyDown = controller.keyDown;
-            paper.view.onFrame = event => {
-                if (loadingLogo) loadingLogo.rotate(1);
+            // paper.view.onKeyDown = controller.keyDown;
+            paper.view.onKeyDown = (event) => {
+                console.log(event.key,'pressed in view:',idNum);
+            }
+            console.log('View', idNum, 'set controller to', controller)
+            paper.view.onFrame = controller.tick
+        },
 
-                controller.tick(event);
-            };
-        }
+        idNum: idNum
     };
 }
