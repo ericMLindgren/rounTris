@@ -148,9 +148,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             let piecePos = addPoints(nextPos, piece);
 
             piecePos = wrapPos(piecePos);
-            // console.log('live blocks', blocks)
             if (debrisField[piecePos.x][piecePos.y] || piecePos.y < 0){
-                // console.log('canDrop failure by blockID:',block)
                 return false;
             }
 
@@ -167,9 +165,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             let piecePos = addPoints(nextPos, piece);
 
             piecePos = wrapPos(piecePos);
-            // console.log('live blocks', blocks)
             if (debrisField[piecePos.x][piecePos.y] || piecePos.y < 0){
-                // console.log('canDrop failure by blockID:',block)
                 return false;
             }
 
@@ -454,9 +450,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
             if (!flags.LOSS)
                 if (flags.NEARLOSS)
                     warningMessage();
-
-            if (flags.DEBRISSPUN)
-                warningMessage();
 
             if (!hasTicked) {
                 //Spawn a block immediately, but just the first tick
