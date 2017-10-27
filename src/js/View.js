@@ -42,6 +42,7 @@ export default function View() {
     let loadingLogo = null;
 
     const ongoingAnimations = [];
+    const alertStatus = {};
 
     const boardLayer = new paper.Layer(),
         blockLayer = new paper.Layer(),
@@ -412,9 +413,35 @@ export default function View() {
     //TODO fix Color for alert type
     //extract animation behaviors to separate functions...
     const spawnAlerts = (worldState) => {
-        for (let alert of worldState.alerts){
-            let thisAlert = textButton({
-                content: alert.message,
+
+        for (let category in worldState.alerts){
+            // If we're already alerting in this category, skip it
+            if (alertStatus[category])
+                continue;
+            // Otherwise flag that we have an alert going.
+            alertStatus[category] = true; 
+
+            alert = worldState.alerts[category];
+
+            
+            const alertAnims = { // TODO refactor these out, unnecessary overhead creating all the time just for convenience of closure
+                BONUS: (event) => {
+                        alertRep.fillColor = 'red';
+                        // alertRep.fontSize = 25 + (Math.sin(event.time * 7.5) + 1) * 5;
+                        alertRep.applyMatrix = false;
+                        alertRep.scale(1.03);
+                        alertRep.opacity -= .01
+                },
+
+                WARNING: (event) => {
+                    alertRep.fillColor = 'red';
+                    const newScale = 1 + (Math.sin(event.time * 7.5)) * .02;
+                    alertRep.scale(newScale);
+                }
+            }
+
+            let alertRep = textButton({
+                content: alert,
                 position: paper.view.center,
                 size: 25,
                 callback: null
@@ -422,13 +449,11 @@ export default function View() {
 
             ongoingAnimations.push(new ViewAnimation({
                 duration: 1,
-                callback: (event) => {thisAlert.remove()},
-                action: (event) => {
-                    thisAlert.fillColor = 'red';
-                    // thisAlert.fontSize = 25 + (Math.sin(event.time * 7.5) + 1) * 5;
-                    thisAlert.applyMatrix = false;
-                    thisAlert.scale(1.03)
+                callback: (event) => {
+                    alertRep.remove();
+                    alertStatus[category] = false;
                 },
+                action: alertAnims[category],
             }))
         }
     }

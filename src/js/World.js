@@ -78,6 +78,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         DEBRISSPUN: false,
         BLOCKSPUN: false,
         BLOCKHIT: false,
+        NEARLOSS: false,
         LOSS: false
     };
 
@@ -86,10 +87,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
     const blockQueue = new BlockGenQueue(3);
 
-    let inMeteorShower = false;
-    let meteorCap = 10;
-    let meteorCount = 0;
-    let meteorRate = 0.8;
 
     let startSpawnRate = 4; //rate at which blocks are generated
     let spawnRate = startSpawnRate; // Allows temporary shifts in spawn rate with chance to return to baseline
@@ -211,10 +208,14 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
     const makeDebrisFromBlock = function(block) {
         //Should take a block and remove it, then convert each piece to debris
+        
+
         for (let piece of block.shape()) {
             let debrisPos = addPoints(piece, block.position());
             debrisPos = wrapPos(debrisPos); //Maps debrisPos to Coordinate system
             debrisField[debrisPos.x][debrisPos.y] = 1;
+            if (debrisPos.y == lossHeight-1)
+                flags.NEARLOSS = true;
         }
 
         deadBlocks.push(block); //flag block for garbage collection
@@ -298,12 +299,36 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         return false;
     };
 
+    const bonusMessage = () => {
+        alertMessage('BONUS', scoreMultiplier + "X BONUS!!!")
+    };
+
+    const warningMessage = () => {
+        // const MESSAGES = [
+        //     'CAREFUL!',
+        //     'WARNING!',
+        //     'DANGER!'
+        //     ];
+        // const message = MESSAGES[getRandomInt(0,MESSAGES.length)];
+        const message = 'DANGER!';
+        alertMessage('WARNING', message);
+    };
+
     const scorePoints = amount => {
-        if (scoreMultiplier > 1) {
-            ALERTS.push({ message: "BONUS!!!", type: "BONUS" });
+        if (flags.ROWSDESTROYED){
+            if (scoreMultiplier < 2) {
+                // DESIGN message for every row is redundant, some other kind of animation will provide same satisfaction w/o feeling of spam
+            } else {
+                bonusMessage();
+            }
         }
+
         score += amount * scoreMultiplier;
     };
+
+    const alertMessage = (alertType, message) => {
+        ALERTS[alertType] = message;
+    }
 
     const randomDropCoord = () => {
         const randomX = getRandomInt(0, worldWidth);
@@ -350,7 +375,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
                 //If there's no blocks, drop one
                 if (blocks.length<2)
-                    worldActions.spawnTick();
+                    spawnTimer += spawnRate*.8; //accelerate next drop if there's not a block yet
             }
         },
 
@@ -397,13 +422,13 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         tick: (actionList, event) => {
             //Reset trackers
             scoreMultiplier = 1;
-            ALERTS = [];
+            ALERTS = {};
             NEW_BLOCKS = [];
             const delta = event.delta
 
 
             for (let flag in flags) {
-                if (flag != 'DEBRISSPUN')
+                if (flag != 'DEBRISSPUN') // TODO make this less cryptic, has to do with block slide
                     flags[flag] = false;
             }
 
@@ -423,17 +448,23 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 worldActions.spawnTick();
             }
 
-            if (checkLoss()) flags.LOSS = true;
+            flags.LOSS = checkLoss();
+
+            // if we didn't lose see if we came close and warn accordingly
+            if (!flags.LOSS)
+                if (flags.NEARLOSS)
+                    warningMessage();
+
+            if (flags.DEBRISSPUN)
+                warningMessage();
 
             if (!hasTicked) {
                 //Spawn a block immediately, but just the first tick
                 worldActions.spawnTick();
                 dropTick();
                 hasTicked = true;
-            }
 
-            if (flags.DEBRISSPUN)
-                ALERTS.push({ message: "BONUS!!!", type: "BONUS" });
+            }
 
             const worldState = {
                 //return world object to be passed to view for drawing
