@@ -423,10 +423,12 @@ export default function View(canvas) {
             callback: controller.startGame
         });
 
-        const instructions =
-            "q,w,up     - rotate blocks\nleft,right -  rotate world\ndown 	     -    drop block\nspace      -         pause\nm          -          mute\n";
+        // const instructions =
+            // "q,w,up     - rotate blocks\nleft,right -  rotate world\ndown 	     -    drop block\nspace      -         pause\nm          -          mute\n";
         // const instructions = 'q,w - rotate blocks \nleft,right - rotate world \ndown - drop block \nspace - pause \n'
 
+        const instructions = controller.getControlsFor(idNum);
+        
         textButton({
             content: instructions,
             position: addPoints(paper.view.center, [0, 100]),

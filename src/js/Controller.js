@@ -3,10 +3,10 @@
 // Handles keyboard input and calls world/view methods as appropriate
 import World from "./World";
 import ActionBuffer from "./ActionBuffer";
+import View from "./View";
 
+export default function Controller(argOb) { 
 
-export default function Controller(argOb) { //TODO clean up argument interface
-    //Controller is initialized with dimensions of the world
 
     let views = argOb.views;
 
@@ -64,8 +64,8 @@ export default function Controller(argOb) { //TODO clean up argument interface
         for (let i = 0; i<worlds.length; i++){
             if (i != dontPunishThis){
                 // Abstract this to part of queue's interface TODO
-                worlds[i].alertMessage('WARNING', 'INCOMING JUNK!')
-                worlds[i].blockQueue.junkify(amount);
+                worlds[i].alertMessage('WARNING', 'ENEMY INCOMING!')
+                worlds[i].blockQueue.messify(amount);
             }
         }
     }
@@ -124,6 +124,16 @@ export default function Controller(argOb) { //TODO clean up argument interface
 
         setSoundManager: newManager => {
             soundManager = newManager;
+        },
+
+        getControlsFor: (bufferNum) => {
+            if (bufferNum > -1 && bufferNum < actionBuffers.length){
+                return actionBuffers[bufferNum].toString();
+            }
+            else {
+                console.log('actionBuffers', actionBuffers)
+                throw '<CONTROLLER> - (getControlsFor) - request for actionBuffer[' + bufferNum + '] keys out of range.'
+            }
         },
 
         keyDown: event => {

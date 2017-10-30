@@ -1,18 +1,6 @@
 //ActionBuffer Class
 
-/*Initialized with a dictionary of format
-
-{
-	'key_pressed': 'world_function_name'
-}
-
-*/
-
-//Takes a key input and translates it into an action
-
-//Adds action onto an Action Queue
-
-//Makes Queue avaialble for dumping
+import {prettierNames} from "./KeyLayouts"
 
 export default function ActionBuffer(keyDict) {
     const buffer = [];
@@ -23,8 +11,6 @@ export default function ActionBuffer(keyDict) {
         bufferDump: () => {
             let retBuf = buffer.slice(); //Copy internal buffer
             buffer.splice(0, buffer.length); //Clear internal buffer
-            // if (retBuf.length>0)
-                // console.log('<ACTIONBUFFER> dumping:', retBuf)
             return retBuf; //return copy
         },
 
@@ -37,14 +23,18 @@ export default function ActionBuffer(keyDict) {
                 }
             }
             return 0;
+        },
+
+        toString: () => {
+            let result = '';
+            for (let key in keyDict){
+                result += prettierNames[key] + ' - ' + prettierNames[keyDict[key].action] + '\n'; 
+            }
+            return result;
         }
     };
 }
 
-// let test = new ActionBuffer(keyLayout);
-// test.keyIn('b');
-// test.keyIn('v');
-// test.keyIn('r');
+// let test = new ActionBuffer(keyLayouts[0]);
 
-// console.log(test.bufferDump());
-// console.log(test.bufferDump());
+// console.log(test.toString());

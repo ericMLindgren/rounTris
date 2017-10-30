@@ -41,3 +41,7 @@ export function arraysEqual(a, b) {
   }
   return true;
 }
+
+export function coinToss(){
+  return getRandomInt(0,2);
+}

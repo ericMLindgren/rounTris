@@ -2,7 +2,7 @@
 
 import { Block, BlockBehaviors } from "./Block";
 
-import { addPoints, subPoints, pointify, getRandomInt, arraysEqual } from "./PointHelpers";
+import { coinToss, addPoints, subPoints, pointify, getRandomInt, arraysEqual } from "./PointHelpers";
 
 // TODO seems weird that blockshapes are in world and not block class
 
@@ -64,9 +64,12 @@ const BlockGenQueue = (maxLength) => {
             return retBlock;
         },
 
-        junkify: (severity) => {
+        messify: (severity) => {
             for (let i = 0; i < severity && i < blockList.length; i++){
-                blockList[i].junkify();
+                if (coinToss())
+                    blockList[i].junkify();
+                else
+                    blockList[i].addBehavior([BlockBehaviors.chameleon,BlockBehaviors.dropzig])
             }
         },
     }
