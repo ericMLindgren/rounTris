@@ -36,6 +36,8 @@ const ViewAnimation = function(argOb) {
 
 export default function View(canvas) {
 
+    let FPSLabel;
+
     canvas = document.getElementById(canvas);
     const scope = new paper.PaperScope();
     paper.setup(canvas);
@@ -44,7 +46,7 @@ export default function View(canvas) {
 
 
     const idNum = getIdNum();
-    const FPS = new FPSLogger("<VIEW "+ idNum + ">", 2);
+    const FPS = new FPSLogger("<VIEW "+ idNum + ">", 1);
 
     let controller = null; //Pointer to the controller so we can pass view events
 
@@ -61,7 +63,15 @@ export default function View(canvas) {
         blockPreviewLayer = new paper.Layer(),
         debrisLayer = new paper.Layer(),
         menuLayer = new paper.Layer(),
-        HUDLayer = new paper.Layer();
+        HUDLayer = new paper.Layer(),
+        fadeLayer = new paper.Layer();
+
+    fadeLayer.activate();
+    const fade = new paper.Path.Rectangle({
+        point: [0,0],
+        size: paper.view.size,
+        color: 'black'
+    })
 
 
 
@@ -331,6 +341,8 @@ export default function View(canvas) {
     };
 
     const drawHUD = worldState => {
+        // TODO this should only happen on the right flags
+
         grabScope();
         const buffer = 20;
 
@@ -340,7 +352,7 @@ export default function View(canvas) {
 
         const scoreLabel = new paper.PointText({
             point: paper.view.center,
-            content: "SCORE: " + worldState.score,
+            content: "SCORE:" + worldState.score,
             fillColor: "black",
             fontFamily: "Courier New",
             fontWeight: "bold",
@@ -348,40 +360,41 @@ export default function View(canvas) {
         });
 
         scoreLabel.position = pointify([
-            scoreLabel.bounds.width / 2 + buffer / 1.3,
-            paper.view.bounds.height - buffer
+            scoreLabel.bounds.width / 2 + buffer / 2,
+            paper.view.bounds.height - buffer*2
         ]);
 
-        const FPSLabel = new paper.PointText({
+        const highScoreLabel = new paper.PointText({
             point: paper.view.center,
-            content: "FPS: " + FPS.FPS.toPrecision(2),
+            content: "HIGHSCORE:" + worldState.highScore,
             fillColor: "black",
             fontFamily: "Courier New",
             fontWeight: "bold",
             fontSize: 20
         });
+        
+        highScoreLabel.position = pointify([
+            highScoreLabel.bounds.width / 2 + buffer / 2,
+            paper.view.bounds.height - buffer
+        ]);
+        
 
-        FPSLabel.position = addPoints(paper.view.center,[0,280]);
     };
 
     const fadeChildren = (root, amount) => {
-        if (root.fillColor){
-            root.fillColor = new paper.Color(
-                root.fillColor.red + amount,
-                root.fillColor.green + amount,
-                root.fillColor.blue + amount 
-                )
-        }
         if (root.children)
             for (let child of root.children)
                 fadeChildren(child, amount)
+        else
+            root.opacity = amount;
     }
 
     const fadeGameBy = amount => {
-        const layersToFade = [blockLayer,debrisLayer,boardLayer,blockPreviewLayer];
+        const layersToFade = [blockLayer,debrisLayer,boardLayer];
         
+        blockPreviewLayer.opacity = amount;
         for (let layer of layersToFade){
-
+            // layer.opacity = amount;
             fadeChildren(layer, amount)
         }
     };
@@ -449,6 +462,22 @@ export default function View(canvas) {
 
     const animationTick = (event) => {
         if (loadingLogo) loadingLogo.rotate(1);
+        
+
+        if (FPSLabel)
+            FPSLabel.remove();
+        FPSLabel = new paper.PointText({
+            point: paper.view.center,
+            content: "FPS: " + FPS.FPS.toPrecision(3),
+            fillColor: "black",
+            fontFamily: "Courier New",
+            fontWeight: "bold",
+            fontSize: 20
+        });
+
+        const bottomBuffer = 20;
+        FPSLabel.position = [paper.view.center.x, paper.view.bounds.height-bottomBuffer];
+
 
         for (let i = ongoingAnimations.length-1; i > -1; i--) {
             const anim = ongoingAnimations[i];
@@ -464,16 +493,18 @@ export default function View(canvas) {
     //TODO fix Color for alert type
     //extract animation behaviors to separate functions...
     const spawnAlerts = (worldState) => {
+        // TODO this does not handle multiple alerts well, 
+        // the right approach would be if we're alerting anythign at all
+        // we add spawning of the next alert as part of the callback
+        // for the current alert.
 
-        for (let category in worldState.alerts){
+        for (let alert of worldState.alerts){
+            console.log('VIEW SPAWNALERTS, alert:',alert)
             // If we're already alerting in this category, skip it
-            if (alertStatus[category])
+            if (alertStatus[alert.type])
                 continue;
             // Otherwise flag that we have an alert going.
-            alertStatus[category] = true; 
-
-            alert = worldState.alerts[category];
-
+            alertStatus[alert.type] = true; 
             
             const alertAnims = { // TODO refactor these out, unnecessary overhead creating all the time just for convenience of closure
                 BONUS: (event) => {
@@ -492,20 +523,21 @@ export default function View(canvas) {
             }
 
             let alertRep = textButton({
-                content: alert,
+                content: alert.message,
                 position: paper.view.center,
                 size: 25,
-                callback: null
+                callback: null,
+                fillColor: 'red'
             });
 
             ongoingAnimations.push(new ViewAnimation({
                 duration: 1,
                 callback: (event) => {
                     alertRep.remove();
-                    alertStatus[category] = false;
+                    alertStatus[alert.type] = false;
                 },
-                action: alertAnims[category],
-            }))
+                action: alertAnims[alert.type],
+            }));
         }
     }
 
@@ -558,42 +590,72 @@ export default function View(canvas) {
 
         pauseScreen: () => {
             console.log('<VIEW> ' + idNum + ' pausing...')
-            fadeGameBy(.21);
+            // fadeGameBy(.21);
+            fadeGameBy(.2)
             textButton({
                 content: "PAUSE",
                 position: paper.view.center,
                 size: 50,
                 callback: null
-            });
+            }); 
         },
 
         unPauseScreen: () => {
             menuLayer.removeChildren();
-            fadeGameBy(-.21);
+            fadeGameBy(1);
         },
 
         gameOverScreen: function() {
 
-            fadeGameBy(.3);
+            // fadeGameBy(.3);
+            fadeGameBy(.2)
 
             textButton({
-                content: "YOU LOSE!",
+                content: "GAME OVER",
                 position: paper.view.center,
                 size: 50,
                 callback: startScreen
             });
 
-            // textButton({
-            //     content: "PLAY AGAIN?",
-            //     position: addPoints(paper.view.center, [0, 40]),
-            //     size: 25,
-            //     callback: startScreen
-            // });
+        },
+
+        winScreen: () => {
+            menuLayer.removeChildren();
+            textButton({
+                content: "YOU WON!",
+                position: paper.view.center,
+                size: 50,
+                callback: startScreen
+            });
+
+            textButton({
+                content: "PLAY AGAIN?",
+                position: addPoints(paper.view.center, [0, 40]),
+                size: 25,
+                callback: startScreen
+            });
+        },
+
+        loseScreen: () => {
+            menuLayer.removeChildren();
+             textButton({
+                content: "YOU LOST!",
+                position: paper.view.center,
+                size: 50,
+                callback: startScreen
+            });
+            textButton({
+                content: "PLAY AGAIN?",
+                position: addPoints(paper.view.center, [0, 40]),
+                size: 25,
+                callback: startScreen
+            });
         },
 
         setController: newController => {
             controller = newController;
-            paper.view.onFrame = controller.tick // move this to vanilla implementation in controller or app
+
+            paper.view.onFrame = controller.tick; // move this to vanilla implementation in controller or app
         },
 
         idNum: idNum

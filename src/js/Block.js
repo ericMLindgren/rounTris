@@ -109,6 +109,18 @@ export function Block(shape, behaviorList) {
             }
         },
 
+        junkify: () => {
+            const coin1 = getRandomInt(0,2);
+            const coin2 = getRandomInt(0,2);
+
+            const amnt = getRandomInt(1,3);
+
+            const newX = coin1 ? amnt : -amnt;
+            const newY = coin2 ? amnt : -amnt;
+
+            thisBlocksShape.push([newX,newY]);
+        },
+
         style: style,
         repStyle: repStyle,
 

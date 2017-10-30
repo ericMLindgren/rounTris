@@ -53,13 +53,6 @@ export default function Controller(argOb) { //TODO clean up argument interface
     };
 
     const worldLoss = (gameIndex) => {
-        // controllerState = "loss";
-
-        // soundManager.stopMusic();
-
-        // for (let view of views){
-        //     view.lossScreen();
-        // }
         gameOvers[gameIndex] = 1;
         views[gameIndex].gameOverScreen();
         if (gameOvers.reduce((a,b) => a+b) ==views.length){
@@ -67,10 +60,33 @@ export default function Controller(argOb) { //TODO clean up argument interface
         }
     };
 
+    const penalizeOthers = (dontPunishThis, amount) => {
+        for (let i = 0; i<worlds.length; i++){
+            if (i != dontPunishThis){
+                // Abstract this to part of queue's interface TODO
+                worlds[i].alertMessage('WARNING', 'INCOMING JUNK!')
+                worlds[i].blockQueue.junkify(amount);
+            }
+        }
+    }
+
     const endAllGames = () => {
+        soundManager.stopMusic();
+
+
         //if multiplayer:
         //Compare scores and declare a winner, offer only the winner replay button
+        for (let i = 0; i < views.length; i++){
+            console.log('world getScore' , worlds[i].getScore())
+            if (worlds[i].getHighScore()<=worlds[i].getScore())
 
+                views[i].winScreen();
+            else
+                views[i].loseScreen();
+
+        }
+
+        
         //if single player show score vs high score, offer replay
     }
 
@@ -111,17 +127,22 @@ export default function Controller(argOb) { //TODO clean up argument interface
         },
 
         keyDown: event => {
-            event.preventDefault();
-            if (event.code == "Space") togglePause();
-            else if (event.code == "KeyM") soundManager.toggleMute();
+            let keyFound = false;            
+            if (event.code == "Space") {togglePause();event.preventDefault();}
+            if (event.code == "KeyG") {penalizeOthers(1,2);event.preventDefault();}
+            else if (event.code == "KeyM") {soundManager.toggleMute();event.preventDefault();}
             else if (controllerState == "running")
                 for (let actionBuffer of actionBuffers) //TODO too brute force, clean
-                    actionBuffer.keyIn(event.code);
+                    if (actionBuffer.keyIn(event.code))
+                        keyFound = true;
+
+            // If we used the keystroke, prevent default;
+            if (keyFound)
+                event.preventDefault();
         },
 
         tick: (event) => {
-
-             
+            let currentHighScore = 0;
 
             for (let i = 0; i < views.length; i++){
 
@@ -137,6 +158,23 @@ export default function Controller(argOb) { //TODO clean up argument interface
                     );
                     view.tick(worldState, event);
 
+                    if (views.length > 1) {// If there's more than one player
+                        //handle scores
+                        if (world.getScore() > currentHighScore)
+                            currentHighScore = world.getScore();
+
+
+
+                        if (worldState.flags.ROWSDESTROYED) // and they destroyed some rows
+                            penalizeOthers(i, worldState.scoreMultiplier); // punish everyone else based on how many rows were destroyed
+                    }
+
+                    //Loss calculatiosn:
+                    if (worldState.flags.LOSS) {
+                        soundManager.playSound('gameOver');
+                        worldLoss(i);
+                    }
+
                     //SoundManager stuff, should abstract
                     if (worldState.flags.BLOCKSPUN)
                         soundManager.playSound("blockSpun"); //increase pitch the higher the block lands
@@ -149,10 +187,14 @@ export default function Controller(argOb) { //TODO clean up argument interface
                         soundManager.playSound("rowDestroyed");
                     if (worldState.flags.BLOCKSPAWNED)
                         soundManager.playSound("woosh", 2);
-                    if (worldState.flags.LOSS) worldLoss(i);
+
                 } else {
                     views[i].tick(null, event); //But we still get to tick animations
                 }
+
+                // Active or not, set each worlds high score to current leader:
+                if (worlds.length>1)
+                    worlds[i].setHighScore(currentHighScore);
             }
         }
     };

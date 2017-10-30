@@ -4,12 +4,14 @@ import { Block, BlockBehaviors } from "./Block";
 
 import { addPoints, subPoints, pointify, getRandomInt, arraysEqual } from "./PointHelpers";
 
+// TODO seems weird that blockshapes are in world and not block class
+
 const BLOCKSHAPES = [
     [[0, -1], [0, 0], [0, 1], [0, 2]], // I
     [[-1, 0], [0, 0], [0, 1], [0, 2]], // L
     [[-1, 0], [0, 0], [1, 0], [0, 1]], // T
     [[-1, 0], [0, 0], [0, 1], [1, 1]], // Z
-    [[-1, 0], [0, 0], [-1, 1], [0, 1]] // O
+    [[-1, 0], [0, 0], [-1, 1], [0, 1]], // O
 ];
 
 
@@ -60,16 +62,24 @@ const BlockGenQueue = (maxLength) => {
             let retBlock = blockList.shift();
             fillQueue();
             return retBlock;
-        }
+        },
+
+        junkify: (severity) => {
+            for (let i = 0; i < severity && i < blockList.length; i++){
+                blockList[i].junkify();
+            }
+        },
     }
 }
 
 
 export default function World(worldWidth, worldHeight, lossHeight) {
     //TODO Abstract this stuff
+    let worldState;
+    let highScore = 0;
     let score = 0;
-    let pointsForBlockLand = 75;
-    let pointsForRowCompleted = 1000;
+    const pointsForBlockLand = 75;
+    const pointsForRowCompleted = 1000;
     let scoreMultiplier = 1;
 
     const flags = {
@@ -82,7 +92,7 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         LOSS: false
     };
 
-    let ALERTS = [];
+    const alertQueue = [];
     let NEW_BLOCKS = [];
 
     const blockQueue = new BlockGenQueue(3);
@@ -300,12 +310,6 @@ export default function World(worldWidth, worldHeight, lossHeight) {
     };
 
     const warningMessage = () => {
-        // const MESSAGES = [
-        //     'CAREFUL!',
-        //     'WARNING!',
-        //     'DANGER!'
-        //     ];
-        // const message = MESSAGES[getRandomInt(0,MESSAGES.length)];
         const message = 'DANGER!';
         alertMessage('WARNING', message);
     };
@@ -323,7 +327,11 @@ export default function World(worldWidth, worldHeight, lossHeight) {
     };
 
     const alertMessage = (alertType, message) => {
-        ALERTS[alertType] = message;
+        // console.log('ALERTMESSAGE: ', message, 'TYPE:', alertType)
+        alertQueue.push({
+            message: message,
+            type: alertType
+        });
     }
 
     const randomDropCoord = () => {
@@ -369,9 +377,9 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 makeDebrisFromBlock(lowestBlock);
                 clearDeadBlocks();
 
-                //If there's no blocks, drop one
-                if (blocks.length<2)
-                    spawnTimer += spawnRate*.8; //accelerate next drop if there's not a block yet
+                if (spawnTimer>spawnRate/3) //If we're more than halfway to next spawn
+                    worldActions.spawnTick();
+                    // spawnTimer += spawnRate*.8; //accelerate next drop if there's not a block yet
             }
         },
 
@@ -418,8 +426,8 @@ export default function World(worldWidth, worldHeight, lossHeight) {
         tick: (actionList, event) => {
             //Reset trackers
             scoreMultiplier = 1;
-            ALERTS = {};
             NEW_BLOCKS = [];
+            const passAlerts = [];
             const delta = event.delta
 
 
@@ -459,7 +467,11 @@ export default function World(worldWidth, worldHeight, lossHeight) {
 
             }
 
-            const worldState = {
+            while (alertQueue.length > 0)
+                passAlerts.push(alertQueue.pop())
+
+
+            worldState = {
                 //return world object to be passed to view for drawing
                 x: worldWidth,
                 y: worldHeight,
@@ -470,9 +482,11 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 coreRadius: 25,
                 wrapPos: wrapPos,
                 score: score,
-                alerts: ALERTS,
+                highScore: highScore,
+                alerts: passAlerts,
                 newBlocks: NEW_BLOCKS,
-                blockQueue: blockQueue
+                blockQueue: blockQueue,
+                scoreMultiplier: scoreMultiplier //Used to determine how much penalty to apply to other players
             };
 
             // Let world blocks express behaviors
@@ -500,6 +514,18 @@ export default function World(worldWidth, worldHeight, lossHeight) {
                 y: worldHeight,
                 lossHeight: lossHeight
             };
+        },
+
+        blockQueue: blockQueue, //Exposing for expediency, create interface for messaging with controller, TODO
+
+        alertMessage: alertMessage,
+
+        getHighScore: () => highScore,
+
+        getScore: () => score,
+
+        setHighScore: (newHigh) => {
+            highScore = newHigh;
         }
     };
 }
