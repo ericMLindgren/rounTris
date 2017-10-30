@@ -338,7 +338,7 @@ export default function View(canvas) {
 
         HUDLayer.removeChildren();
 
-        const button = new paper.PointText({
+        const scoreLabel = new paper.PointText({
             point: paper.view.center,
             content: "SCORE: " + worldState.score,
             fillColor: "black",
@@ -347,10 +347,21 @@ export default function View(canvas) {
             fontSize: 20
         });
 
-        button.position = pointify([
-            button.bounds.width / 2 + buffer / 1.3,
+        scoreLabel.position = pointify([
+            scoreLabel.bounds.width / 2 + buffer / 1.3,
             paper.view.bounds.height - buffer
         ]);
+
+        const FPSLabel = new paper.PointText({
+            point: paper.view.center,
+            content: "FPS: " + FPS.FPS.toPrecision(2),
+            fillColor: "black",
+            fontFamily: "Courier New",
+            fontWeight: "bold",
+            fontSize: 20
+        });
+
+        FPSLabel.position = addPoints(paper.view.center,[0,280]);
     };
 
     const fadeChildren = (root, amount) => {
@@ -370,7 +381,7 @@ export default function View(canvas) {
         const layersToFade = [blockLayer,debrisLayer,boardLayer,blockPreviewLayer];
         
         for (let layer of layersToFade){
-            
+
             fadeChildren(layer, amount)
         }
     };

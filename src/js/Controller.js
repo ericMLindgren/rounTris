@@ -62,7 +62,7 @@ export default function Controller(argOb) { //TODO clean up argument interface
         // }
         gameOvers[gameIndex] = 1;
         views[gameIndex].gameOverScreen();
-        if (gameOvers.reduce((a,b) => a+b)){
+        if (gameOvers.reduce((a,b) => a+b) ==views.length){
             endAllGames();
         }
     };
@@ -120,6 +120,9 @@ export default function Controller(argOb) { //TODO clean up argument interface
         },
 
         tick: (event) => {
+
+             
+
             for (let i = 0; i < views.length; i++){
 
                 if (controllerState == "running" && gameOvers[i] == 0) {

@@ -174,7 +174,6 @@ export const BlockBehaviors = {
         const repStyle = argOb.repStyle;
 
         const newOpacity = 1 - (Math.sin(event.time*7.5) + 1)*.08;
-
         style.opacity = newOpacity;
         repStyle.opacity = newOpacity;
     },

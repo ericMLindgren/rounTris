@@ -31,8 +31,8 @@ const soundSources = {
 
 
 //TODO have controller
-// const views = [new View('canvas1')]; //TODO
-const views = [new View('canvas1'), new View('canvas2')];
+const views = [new View('canvas1')]; //TODO
+// const views = [new View('canvas1'), new View('canvas2')];
 // const views = [new View('canvas1'), new View('canvas2'),new View('canvas3'), new View('canvas4')]; //TODO
 
 
