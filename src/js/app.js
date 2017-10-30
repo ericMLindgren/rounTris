@@ -29,7 +29,12 @@ const soundSources = {
 // true argument designates one view as the canvas who's redraw
 // triggers the controllers tick, which then propagates
 
+
+//TODO have controller
+// const views = [new View('canvas1')]; //TODO
 const views = [new View('canvas1'), new View('canvas2')];
+// const views = [new View('canvas1'), new View('canvas2'),new View('canvas3'), new View('canvas4')]; //TODO
+
 
 const controller = new Controller({
     views: views,

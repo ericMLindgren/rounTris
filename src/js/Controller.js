@@ -11,10 +11,12 @@ export default function Controller(argOb) { //TODO clean up argument interface
     let views = argOb.views;
 
     let worlds = [];
+    let gameOvers = [];
     let actionBuffers = [];
     let soundManager = null;
 
-    let gameState = "stopped";
+
+    let controllerState = "stopped";
     let PAUSED = false;
 
     if (views.length> argOb.keyLayouts.length)
@@ -26,49 +28,75 @@ export default function Controller(argOb) { //TODO clean up argument interface
 
     
     const togglePause = () => {
-        if (gameState != "stopped" && gameState != "loss") {
-            //Switch state
-            if (gameState == "paused") {
-                gameState = "running";
+        if (controllerState != "stopped" && controllerState != "loss") {
+            //Switch state and music
+            if (controllerState == "paused") {
+                controllerState = "running";
                 soundManager.playTrack(0);
             }
             else {
-                gameState = "paused";
+                controllerState = "paused";
                 soundManager.stopMusic();
             }
 
-            for (let view of views){
-                if (gameState == "paused") {
-                    view.pauseScreen();
-                } else {
-                    view.unPauseScreen();
+            for (let i = views.length-1; i > -1; i--){
+                if (!gameOvers[i]){
+                    const view = views[i];
+                    if (controllerState == "paused") {
+                        view.pauseScreen();
+                    } else {
+                        view.unPauseScreen();
+                    }
                 }
             }
         }
     };
 
-    const loseGame = () => {
-        gameState = "loss";
+    const worldLoss = (gameIndex) => {
+        // controllerState = "loss";
 
-        soundManager.playSound("gameOver");
-        soundManager.stopMusic();
+        // soundManager.stopMusic();
 
-        for (let view of views)
-            view.lossScreen();
+        // for (let view of views){
+        //     view.lossScreen();
+        // }
+        gameOvers[gameIndex] = 1;
+        views[gameIndex].gameOverScreen();
+        if (gameOvers.reduce((a,b) => a+b)){
+            endAllGames();
+        }
     };
+
+    const endAllGames = () => {
+        //if multiplayer:
+        //Compare scores and declare a winner, offer only the winner replay button
+
+        //if single player show score vs high score, offer replay
+    }
 
     return {
         startGame: () => {
             while (worlds.length > 0)
                 worlds.pop();
+
+            while (gameOvers.length > 0)
+                gameOvers.pop();
+
             for (let i = 0; i < views.length; i++){
                 worlds.push(new World(...argOb.worldDimensions));
+                gameOvers.push(0);
 
                 views[i].playScreen(worlds[i].tick(actionBuffers[i].bufferDump(), 0));
             }
             soundManager.playTrack(0);
-            gameState = "running";
+            controllerState = "running";
 
+        },
+
+        markAsReady: (viewNum) => {
+            // mark a view as ready,
+            // if ready's == views.length
+            // then start game
         },
 
         // Called by soundmanager after load, puts startscreen on each view
@@ -83,21 +111,22 @@ export default function Controller(argOb) { //TODO clean up argument interface
         },
 
         keyDown: event => {
+            event.preventDefault();
             if (event.code == "Space") togglePause();
             else if (event.code == "KeyM") soundManager.toggleMute();
-            else if (gameState == "running")
+            else if (controllerState == "running")
                 for (let actionBuffer of actionBuffers) //TODO too brute force, clean
                     actionBuffer.keyIn(event.code);
         },
 
         tick: (event) => {
             for (let i = 0; i < views.length; i++){
-                const view = views[i];
-                const world = worlds[i];
-                const actionBuffer = actionBuffers[i];
 
+                if (controllerState == "running" && gameOvers[i] == 0) {
 
-                if (gameState == "running") {
+                    const view = views[i];
+                    const world = worlds[i];
+                    const actionBuffer = actionBuffers[i];
                     
                     const worldState = world.tick(
                         actionBuffer.bufferDump(),
@@ -117,9 +146,9 @@ export default function Controller(argOb) { //TODO clean up argument interface
                         soundManager.playSound("rowDestroyed");
                     if (worldState.flags.BLOCKSPAWNED)
                         soundManager.playSound("woosh", 2);
-                    if (worldState.flags.LOSS) loseGame();
+                    if (worldState.flags.LOSS) worldLoss(i);
                 } else {
-                    view.tick(null, event); //But we still get to tick animations
+                    views[i].tick(null, event); //But we still get to tick animations
                 }
             }
         }

@@ -2,7 +2,7 @@
 
 import Controller from "./Controller";
 import { addPoints, subPoints, pointify } from "./PointHelpers";
-
+import FPSLogger from "./FPSLogger";
 //Handles drawing game World, hud, as well as start and end screens...
 
 // const canvas = document.getElementById("canvas1");
@@ -38,14 +38,14 @@ export default function View(canvas) {
 
     canvas = document.getElementById(canvas);
     const scope = new paper.PaperScope();
-
     paper.setup(canvas);
-    // console.log('scope ob', thisScope)
     paper.view.draw();
+    const grabScope = () => {paper = scope;};
 
-    console.log(paper)
 
     const idNum = getIdNum();
+    const FPS = new FPSLogger("<VIEW "+ idNum + ">", 2);
+
     let controller = null; //Pointer to the controller so we can pass view events
 
     let spinFlag = false; //Flags to flip if world changes so we know it needs redrawing
@@ -62,6 +62,8 @@ export default function View(canvas) {
         debrisLayer = new paper.Layer(),
         menuLayer = new paper.Layer(),
         HUDLayer = new paper.Layer();
+
+
 
     //GameBoard Objects TODO Deprecate these in favor of layers for all tasks
     let worldCore = null;
@@ -311,6 +313,7 @@ export default function View(canvas) {
     };
 
     const textButton = propOb => {
+        grabScope();
         menuLayer.activate();
 
         const text = new paper.PointText({
@@ -328,6 +331,7 @@ export default function View(canvas) {
     };
 
     const drawHUD = worldState => {
+        grabScope();
         const buffer = 20;
 
         HUDLayer.activate();
@@ -349,25 +353,44 @@ export default function View(canvas) {
         ]);
     };
 
-    
+    const fadeChildren = (root, amount) => {
+        if (root.fillColor){
+            root.fillColor = new paper.Color(
+                root.fillColor.red + amount,
+                root.fillColor.green + amount,
+                root.fillColor.blue + amount 
+                )
+        }
+        if (root.children)
+            for (let child of root.children)
+                fadeChildren(child, amount)
+    }
 
-    const setGameOpacity = newOpacity => {
-        blockLayer.opacity = newOpacity;
-        debrisLayer.opacity = newOpacity;
-        boardLayer.opacity = newOpacity;
-        blockPreviewLayer.opacity = newOpacity;
-    };
-
-    const clearAllLayers = () => {
-        for (let layer of paper.project.layers) {
-            layer.removeChildren();
+    const fadeGameBy = amount => {
+        const layersToFade = [blockLayer,debrisLayer,boardLayer,blockPreviewLayer];
+        
+        for (let layer of layersToFade){
+            
+            fadeChildren(layer, amount)
         }
     };
 
+    const onAllLayers = (action) => {
+        grabScope();
+        for (let layer of paper.project.layers) {
+            // layer.removeChildren();
+            action(layer)
+        }
+    };
+
+
     const startScreen = () => {
         // TODO centralize this.
-        paper = scope;
-        clearAllLayers();
+        // clearAllLayers();
+        onAllLayers((layer)=>{
+            layer.removeChildren();
+        })
+
         let content = 'PLAYER ' + parseInt(idNum+1) + ' READY';
         const beginButton = textButton({
             content: content,
@@ -475,14 +498,25 @@ export default function View(canvas) {
         }
     }
 
-    loadScreen();
+    const logLayers = () => {
+        console.log('<VIEW> id:', idNum, 'logging layers...');
+        console.log('boardLayer', boardLayer.children);
+        console.log('blockLayer', blockLayer.children);
+        console.log('blockPreviewLayer', blockPreviewLayer.children);
+        console.log('debrisLayer', debrisLayer.children); 
+        console.log('menuLayer', menuLayer.children); 
+        console.log('HUDLayer', HUDLayer.children); 
+    }
+    let logTimer = 0;
+
+    loadScreen(); //Initialize view TODO move this to Controller    
 
     return {
         tick: (worldState, event) => {
-            // console.log('<VIEW', idNum+'> controller ticked me')
-            // paper.setup(canvas);
-            paper = scope;
-            scope.activate();
+
+            FPS.frame(event.delta);
+
+            grabScope();
             if (worldState) {
                 updateBoard(worldState);
                 drawHUD(worldState);
@@ -508,11 +542,12 @@ export default function View(canvas) {
             menuLayer.removeChildren();
             updateBoard(gameState)
             // drawBoard(gameState);
-            setGameOpacity(1);
+            // fadeGameBy(0);
         },
 
         pauseScreen: () => {
-            setGameOpacity(0.2);
+            console.log('<VIEW> ' + idNum + ' pausing...')
+            fadeGameBy(.21);
             textButton({
                 content: "PAUSE",
                 position: paper.view.center,
@@ -523,11 +558,13 @@ export default function View(canvas) {
 
         unPauseScreen: () => {
             menuLayer.removeChildren();
-            setGameOpacity(1);
+            fadeGameBy(-.21);
         },
 
-        lossScreen: function() {
-            setGameOpacity(0.5);
+        gameOverScreen: function() {
+
+            fadeGameBy(.3);
+
             textButton({
                 content: "YOU LOSE!",
                 position: paper.view.center,
@@ -535,17 +572,16 @@ export default function View(canvas) {
                 callback: startScreen
             });
 
-            textButton({
-                content: "PLAY AGAIN?",
-                position: addPoints(paper.view.center, [0, 40]),
-                size: 25,
-                callback: startScreen
-            });
+            // textButton({
+            //     content: "PLAY AGAIN?",
+            //     position: addPoints(paper.view.center, [0, 40]),
+            //     size: 25,
+            //     callback: startScreen
+            // });
         },
 
         setController: newController => {
             controller = newController;
-            console.log('View', idNum, 'set controller to', controller)
             paper.view.onFrame = controller.tick // move this to vanilla implementation in controller or app
         },
 
