@@ -62,7 +62,7 @@ export default function Controller(argOb) {
 
     const penalizeOthers = (dontPunishThis, amount) => {
         for (let i = 0; i<worlds.length; i++){
-            if (i != dontPunishThis){
+            if (i != dontPunishThis && !gameOvers[i]){
                 // Abstract this to part of queue's interface TODO
                 worlds[i].alertMessage('WARNING', 'ENEMY INCOMING!')
                 worlds[i].blockQueue.messify(amount);
@@ -139,7 +139,6 @@ export default function Controller(argOb) {
         keyDown: event => {
             let keyFound = false;            
             if (event.code == "Space") {togglePause();event.preventDefault();}
-            if (event.code == "KeyG") {penalizeOthers(1,2);event.preventDefault();}
             else if (event.code == "KeyM") {soundManager.toggleMute();event.preventDefault();}
             else if (controllerState == "running")
                 for (let actionBuffer of actionBuffers) //TODO too brute force, clean

@@ -16,7 +16,14 @@ export const prettierNames = {
     'spaceM': 'M / Space'
 };
 
-export const keyLayouts = [    
+export const keyLayouts = [ 
+    {
+    	spaceM: {action: "pauseMute"},
+        KeyA: { action: "spinDebris", args: "counterClockwise" },
+        KeyD: { action: "spinDebris", args: "clockwise" },
+        KeyS: { action: "rushDrop", args: null },
+        KeyW: { action: "spinBlocks", args: "clockwise" },
+    },   
     {
     	spaceM: {action: "pauseMute"},
         ArrowLeft: { action: "spinDebris", args: "counterClockwise" },
@@ -24,20 +31,16 @@ export const keyLayouts = [
         ArrowDown: { action: "rushDrop", args: null },
         ArrowUp: { action: "spinBlocks", args: "clockwise" },
     },
-    {
-    	spaceM: {action: "pauseMute"},
-        KeyA: { action: "spinDebris", args: "counterClockwise" },
-        KeyD: { action: "spinDebris", args: "clockwise" },
-        KeyS: { action: "rushDrop", args: null },
-        KeyW: { action: "spinBlocks", args: "clockwise" },
-    },
+
     // {
+    // 	spaceM: {action: "pauseMute"},
     //     ArrowLeft: { action: "spinDebris", args: "counterClockwise" },
     //     ArrowRight: { action: "spinDebris", args: "clockwise" },
     //     ArrowDown: { action: "rushDrop", args: null },
     //     ArrowUp: { action: "spinBlocks", args: "clockwise" },
     // },
     // {
+    // 	spaceM: {action: "pauseMute"},
     //     KeyA: { action: "spinDebris", args: "counterClockwise" },
     //     KeyD: { action: "spinDebris", args: "clockwise" },
     //     KeyS: { action: "rushDrop", args: null },

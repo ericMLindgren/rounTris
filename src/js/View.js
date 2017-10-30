@@ -34,11 +34,11 @@ const ViewAnimation = function(argOb) {
     this.tick = argOb.action
 }
 
-export default function View(canvas) {
+export default function View(canvasID) {
 
     let FPSLabel;
 
-    canvas = document.getElementById(canvas);
+    const canvas = document.getElementById(canvasID);
     const scope = new paper.PaperScope();
     paper.setup(canvas);
     paper.view.draw();
@@ -428,7 +428,7 @@ export default function View(canvas) {
         // const instructions = 'q,w - rotate blocks \nleft,right - rotate world \ndown - drop block \nspace - pause \n'
 
         const instructions = controller.getControlsFor(idNum);
-        
+
         textButton({
             content: instructions,
             position: addPoints(paper.view.center, [0, 100]),
