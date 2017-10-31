@@ -23,6 +23,7 @@ startButton.addEventListener('click', () => {gameInit(playerCount.value)})
 
 const createViews = function(howmany) {
     //Remove old views if there are any...
+    const container = document.getElementById('content');
 
     while (canvases.length>0){
         canvases.pop().remove();
@@ -36,11 +37,12 @@ const createViews = function(howmany) {
         //Set width and height
         thisCanvas.style.width = CANVAS_WIDTH+'px';
         thisCanvas.style.height = CANVAS_HEIGHT+'px';
-        thisCanvas.style.margin = '20px';
+        thisCanvas.style.margin = '7px';
+
         thisCanvas.style.backgroundColor = CANVAS_COLOR;
 
         canvases.push(thisCanvas);
-        document.body.appendChild(thisCanvas);
+        container.appendChild(thisCanvas);
 
         const thisView = new View(thisCanvas.id);
         retViews.push(thisView);

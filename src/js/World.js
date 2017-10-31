@@ -19,8 +19,8 @@ const makeRandomBlock = () => {
     let randomShape = BLOCKSHAPES[getRandomInt(0, BLOCKSHAPES.length)];
     let newBlock = new Block(randomShape);
 
-    const coin = getRandomInt(0,10);
-    if (coin%5==0)
+    const coin = getRandomInt(0,5);
+    if (coin==0)
         newBlock.addBehavior([BlockBehaviors.chameleon, BlockBehaviors.phase]);
     else
         newBlock.addBehavior([BlockBehaviors.glow]);
@@ -66,6 +66,8 @@ const BlockGenQueue = (maxLength) => {
 
         messify: (severity) => {
             for (let i = 0; i < severity && i < blockList.length; i++){
+
+                console.log('making mess, i:',i)
                 if (coinToss())
                     blockList[i].junkify();
                 else

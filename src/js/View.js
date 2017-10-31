@@ -621,12 +621,18 @@ export default function View(canvasID) {
 
         },
 
-        winScreen: () => {
+        winScreen: (playerCount) => {
             menuLayer.removeChildren();
+            let winMessage = "YOU WON!"
+            let messageScale = 1;
+            if (playerCount==1){
+                winMessage = "YOU BEAT THE HIGH SCORE!";
+                messageScale = .7;
+            }
             textButton({
-                content: "YOU WON!",
+                content: winMessage,
                 position: paper.view.center,
-                size: 50,
+                size: 50*messageScale,
                 callback: startScreen
             });
 

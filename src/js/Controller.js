@@ -4,9 +4,11 @@
 import World from "./World";
 import ActionBuffer from "./ActionBuffer";
 import View from "./View";
+import {getCookie, setCookie} from "./CookieHelpers";
 
-export default function Controller(argOb) { 
+export default function Controller(argOb) {
 
+    let highScore = 0;
 
     let views = argOb.views;
 
@@ -80,10 +82,20 @@ export default function Controller(argOb) {
             console.log('world getScore' , worlds[i].getScore())
             if (worlds[i].getHighScore()<=worlds[i].getScore())
 
-                views[i].winScreen();
+                views[i].winScreen(worlds.length);
             else
                 views[i].loseScreen();
+        }
 
+        if (worlds.length == 1){
+            // if we beat the high score, set a cookie!
+            const worldScore = worlds[0].getScore();
+            console.log('one player game over')
+
+            if (worldScore>highScore) {
+                console.log('player beat high score, setting cookie')
+                setCookie('rounTris_high_score', worldScore, 365*10 )
+            }
         }
 
         
@@ -104,6 +116,15 @@ export default function Controller(argOb) {
 
                 views[i].playScreen(worlds[i].tick(actionBuffers[i].bufferDump(), 0));
             }
+
+            if (worlds.length == 1){ // if we're in one player
+                const scoreCookie = getCookie('rounTris_high_score');
+                console.log('getting cookie:', scoreCookie)
+                // set cookie to scoreCookie if it exists or 0
+                highScore = scoreCookie ? scoreCookie : 0; 
+                worlds[0].setHighScore(highScore);
+            } 
+
             soundManager.playTrack(0);
             controllerState = "running";
 
@@ -151,7 +172,7 @@ export default function Controller(argOb) {
         },
 
         tick: (event) => {
-            let currentHighScore = 0;
+            
 
             for (let i = 0; i < views.length; i++){
 
@@ -169,13 +190,13 @@ export default function Controller(argOb) {
 
                     if (views.length > 1) {// If there's more than one player
                         //handle scores
-                        if (world.getScore() > currentHighScore)
-                            currentHighScore = world.getScore();
+                        if (world.getScore() > highScore)
+                            highScore = world.getScore();
 
 
 
                         if (worldState.flags.ROWSDESTROYED) // and they destroyed some rows
-                            penalizeOthers(i, worldState.scoreMultiplier); // punish everyone else based on how many rows were destroyed
+                            penalizeOthers(i, worldState.scoreMultiplier-1); // punish everyone else based on how many rows were destroyed
                     }
 
                     //Loss calculatiosn:
@@ -202,8 +223,10 @@ export default function Controller(argOb) {
                 }
 
                 // Active or not, set each worlds high score to current leader:
-                if (worlds.length>1)
-                    worlds[i].setHighScore(currentHighScore);
+                if (worlds.length>1){
+                    console.log('setting high score to:', highScore)
+                    worlds[i].setHighScore(highScore);
+                }
             }
         }
     };

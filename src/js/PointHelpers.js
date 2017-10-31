@@ -45,3 +45,4 @@ export function arraysEqual(a, b) {
 export function coinToss(){
   return getRandomInt(0,2);
 }
+
