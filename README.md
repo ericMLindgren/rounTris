@@ -2,4 +2,4 @@
 
 A modern homage to the classic.  
 
-Check out http://ericLindgren.me/rounTris/ to play. 
+Check out http://ericLindgren.me/rountris/ to play. 
